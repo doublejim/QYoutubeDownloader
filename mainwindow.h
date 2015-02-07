@@ -8,7 +8,10 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QListWidgetItem>
-#include "dialog1.h"
+#include <QDebug>
+#include <QMessageBox>
+
+#include "dialognewdownload.h"
 
 namespace Ui {
 class MainWindow;
@@ -36,14 +39,14 @@ private slots:
     void add_video_to_download_list();
     void downloading_ended(int a);
 
-    void on_pushButton_clicked();
-    void on_pushButton_2_clicked();
-    void on_pushButton_3_clicked();
-    void on_pushButton_4_clicked();
-    void on_lineEdit_2_textChanged();
-    void on_listWidget_doubleClicked();
-    void on_lineEdit_textChanged();
-    void on_comboBox_currentIndexChanged();
+    void on_btnStartDownload_clicked();
+    void on_btnBrowse_clicked();
+    void on_btnToggleDetails_clicked();
+    void on_btnAddVideoToQueue_clicked();
+    void on_editDownloadPath_textChanged();
+    void on_listVideos_doubleClicked();
+    void on_editSearch_textChanged();
+    void on_comboSortType_currentIndexChanged();
 
 private:
     Ui::MainWindow *ui;

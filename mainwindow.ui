@@ -14,49 +14,66 @@
    <string>QYoutubeDownloader</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout_5">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <property name="spacing">
-       <number>6</number>
-      </property>
-      <property name="sizeConstraint">
-       <enum>QLayout::SetMinimumSize</enum>
-      </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout">
+         <widget class="QPushButton" name="btnAddVideoToQueue">
+          <property name="text">
+           <string>Add video to the download list</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="listVideoQueue"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
+          <property name="spacing">
+           <number>1</number>
+          </property>
           <item>
-           <widget class="QPushButton" name="pushButton_4">
+           <widget class="QRadioButton" name="radioAudioVideo">
             <property name="text">
-             <string>Add video to the download list</string>
+             <string>Video + Audio</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QListWidget" name="listWidget_2"/>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QRadioButton" name="radioAudioOnly">
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
             <property name="text">
-             <string>Start downloading</string>
+             <string>Only Audio</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
+         <widget class="QPushButton" name="btnStartDownload">
+          <property name="text">
+           <string>Start downloading</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item alignment="Qt::AlignLeft">
-           <widget class="QPushButton" name="pushButton_3">
+           <widget class="QPushButton" name="btnToggleDetails">
             <property name="text">
              <string>Toggle details</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QTextEdit" name="textEdit">
+           <widget class="QTextEdit" name="textDetails">
             <property name="layoutDirection">
              <enum>Qt::LeftToRight</enum>
             </property>
@@ -91,7 +108,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="labelDownloadToThis">
           <property name="text">
            <string>Download to this folder:</string>
           </property>
@@ -100,10 +117,10 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QLineEdit" name="lineEdit_2"/>
+           <widget class="QLineEdit" name="editDownloadPath"/>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="btnBrowse">
             <property name="text">
              <string>Browse...</string>
             </property>
@@ -112,47 +129,30 @@
          </layout>
         </item>
         <item>
-         <widget class="QRadioButton" name="radioButton">
-          <property name="text">
-           <string>Audio + Video</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="radioButton_2">
-          <property name="text">
-           <string>Audio only</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QLabel" name="label_7">
+           <widget class="QLabel" name="labelSearch">
             <property name="text">
              <string>Search:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit"/>
+           <widget class="QLineEdit" name="editSearch"/>
           </item>
          </layout>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QLabel" name="label_4">
+           <widget class="QLabel" name="labelAllVideos">
             <property name="text">
              <string>All videos in folder:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox">
+           <widget class="QComboBox" name="comboSortType">
             <item>
              <property name="text">
               <string>Sort by modified time</string>
@@ -168,7 +168,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QListWidget" name="listWidget">
+         <widget class="QListWidget" name="listVideos">
           <property name="font">
            <font>
             <italic>false</italic>
@@ -186,14 +186,14 @@
     <item>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
+       <widget class="QLabel" name="labelVideo">
         <property name="text">
          <string>Video</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QProgressBar" name="progressBar">
+       <widget class="QProgressBar" name="progressVideo">
         <property name="value">
          <number>0</number>
         </property>
@@ -203,14 +203,14 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_6">
+       <widget class="QLabel" name="labelAudio">
         <property name="text">
          <string>Audio</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QProgressBar" name="progressBar_2">
+       <widget class="QProgressBar" name="progressAudio">
         <property name="value">
          <number>0</number>
         </property>
@@ -226,7 +226,7 @@
      <x>0</x>
      <y>0</y>
      <width>631</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

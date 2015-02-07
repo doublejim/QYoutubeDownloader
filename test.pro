@@ -15,12 +15,12 @@ CONFIG += c++11
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    dialog1.cpp \
-    ipc_client_server.cpp
+    ipc_client_server.cpp \
+    dialognewdownload.cpp
 
 HEADERS  += mainwindow.h \
-    dialog1.h \
-    ipc_client_server.h
+    ipc_client_server.h \
+    dialognewdownload.h
 
 FORMS    += mainwindow.ui \
-    dialog1.ui
+    dialognewdownload.ui
