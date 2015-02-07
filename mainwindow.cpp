@@ -72,7 +72,12 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
         case 1: { // begynder at downloade video
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
-                    ++download_progress;
+                {
+                    if(ui->radioButton->isChecked()) // Download Audio + video
+                        download_progress = 2;
+                    else // Download Audio
+                        download_progress = 4;
+                }
                 break;
                 }
         case 2: { // downloader video
@@ -155,7 +160,12 @@ void MainWindow::download_top_video()
     QString program = "youtube-dl";
     QStringList arguments;
     QListWidgetItem* item = ui->listWidget_2->item(0);
-    arguments << item->text() << "-o" << ui->lineEdit_2->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << "bestvideo+bestaudio";
+
+    QString format_to_download = "bestvideo+bestaudio";
+    if(ui->radioButton_2->isChecked())
+        format_to_download = "bestaudio";
+
+    arguments << item->text() << "-o" << ui->lineEdit_2->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << format_to_download;
 
     youtube_dl = new QProcess(this);
     connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
