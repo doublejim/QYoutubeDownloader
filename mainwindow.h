@@ -28,7 +28,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void add_video_to_download_list_from_outside(QString url);
-    enum available_formats {bestvideo_bestaudio, bestaudio};
 
 private slots:
     void load_settings();
@@ -43,9 +42,10 @@ private slots:
     void refresh_filelist_filtering();
     void select_directory();
     void refresh_interface();
-    void download_top_video(available_formats format);
+    void download_top_video();
     void add_video_to_download_list();
     void downloading_ended(int a);
+    void create_item_title_from_its_data(QListWidgetItem* item);
 
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
@@ -68,6 +68,8 @@ private:
     QStringList complete_filelist;
     bool going_to_play_video = false;
 
+    bool settingAlwaysHideDetails = false;
+    bool settingAutoDownload = false;
 };
 
 #endif // MAINWINDOW_H
