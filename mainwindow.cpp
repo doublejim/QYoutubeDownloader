@@ -15,6 +15,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     load_settings();
     if (ui->editDownloadPath->text()=="")  ui->editDownloadPath->setText(".");
+
+    QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->listVideoQueue);
+    connect(shortcut, SIGNAL(activated()), this, SLOT(delete_selected_item_on_queue()));
 }
 
 MainWindow::~MainWindow()
@@ -213,6 +216,12 @@ void MainWindow::download_top_video(available_formats format)
     ui->btnStartDownload->setText("Pause");
     ++download_progress;
     youtube_dl->start(program,arguments);
+}
+
+void MainWindow::delete_selected_item_on_queue()
+{
+    QListWidgetItem *item = ui->listVideoQueue->currentItem();
+    delete item;
 }
 
 void MainWindow::stop_downloading()

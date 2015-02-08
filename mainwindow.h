@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QSettings>
+#include <QShortcut>
 
 #include "dialognewdownload.h"
 #include "settingswindow.h"
@@ -36,6 +37,7 @@ private slots:
     void check_download_path();
     void fix_download_path();
     void stop_downloading();
+    void delete_selected_item_on_queue();
     void open_video();
     void refresh_filelist();
     void refresh_filelist_filtering();
