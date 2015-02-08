@@ -18,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->listVideoQueue);
     connect(shortcut, SIGNAL(activated()), this, SLOT(delete_selected_item_on_queue()));
+
+    ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
 }
 
 MainWindow::~MainWindow()
@@ -244,8 +247,8 @@ void MainWindow::add_video_to_download_list()
 
         switch (dialog1.format_to_download)
         {
-            case 0: item->setData(Qt::DisplayRole,item_name+" | Video+Audio"); break;
-            case 1: item->setData(Qt::DisplayRole,item_name+" | Audio"); break;
+            case 0: item->setData(Qt::DisplayRole, item_name+" | Video+Audio"); break;
+            case 1: item->setData(Qt::DisplayRole, item_name+" | Audio"); break;
         }
 
         ui->listVideoQueue->addItem(item);
@@ -379,4 +382,37 @@ void MainWindow::on_actionSettings_Menu_triggered()
     SettingsWindow window;
     window.setModal(false);
     window.exec();
+}
+
+void MainWindow::customContextMenuRequested(QPoint pos)
+{
+    QModelIndex index = ui->listVideoQueue->indexAt(pos);
+
+    QMenu *menu=new QMenu(this);
+    menu->addAction("Toggle download Audio+Video/Audio only", this, SLOT(toggle_download_format()));
+
+    menu->popup(ui->listVideoQueue->viewport()->mapToGlobal(pos));
+}
+
+void MainWindow::toggle_download_format()
+{
+    QModelIndexList indexes = ui->listVideoQueue->selectionModel()->selectedIndexes();
+
+    QListWidgetItem *item;
+    foreach(QModelIndex index, indexes)
+    {
+        item = ui->listVideoQueue->item(index.row());
+        QStringList item_name = item->text().split(" |");
+
+        if(item->data(Qt::UserRole) == 0)
+        {
+            item->setData(Qt::UserRole, 1);
+            item->setData(Qt::DisplayRole, item_name[0] + " | Audio");
+        }
+        else
+        {
+            item->setData(Qt::UserRole, 0);
+            item->setData(Qt::DisplayRole, item_name[0] + " | Video+Audio");
+        }
+    }
 }

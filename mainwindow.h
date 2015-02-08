@@ -57,6 +57,8 @@ private slots:
     void on_comboSortType_currentIndexChanged();
 
     void on_actionSettings_Menu_triggered();
+    void customContextMenuRequested(QPoint);
+    void toggle_download_format();
 
 private:
     Ui::MainWindow *ui;

@@ -27,7 +27,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QListWidget" name="listVideoQueue"/>
+         <widget class="QListWidget" name="listVideoQueue">
+          <property name="selectionMode">
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="btnStartDownload">
@@ -199,7 +203,7 @@
      <x>0</x>
      <y>0</y>
      <width>631</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="defaultUp">
