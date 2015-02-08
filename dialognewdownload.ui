@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>283</width>
-    <height>115</height>
+    <width>326</width>
+    <height>139</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,6 +23,30 @@
    </item>
    <item>
     <widget class="QLineEdit" name="editUserInput"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+     <item>
+      <widget class="QRadioButton" name="radioVideoAudio">
+       <property name="text">
+        <string>Video and Audio</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioAudioOnly">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>Only Audio</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="btnboxOkCancel">

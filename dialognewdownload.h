@@ -15,6 +15,7 @@ public:
     explicit DialogNewDownload(QWidget *parent = 0);
     ~DialogNewDownload();
     QString user_input;
+    ushort format_to_download;
 
 private slots:
     void on_btnboxOkCancel_accepted();

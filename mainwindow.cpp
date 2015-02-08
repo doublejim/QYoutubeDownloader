@@ -7,16 +7,49 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+
     ui->progressVideo->hide();
     ui->progressAudio->hide();
     ui->labelVideo->hide();
     ui->labelAudio->hide();
-    ui->editDownloadPath->setText(".");
+
+    load_settings();
+    if (ui->editDownloadPath->text()=="")  ui->editDownloadPath->setText(".");
 }
 
 MainWindow::~MainWindow()
 {
+    save_settings();
     delete ui;
+}
+
+void MainWindow::load_settings()
+{
+    QSettings settings(QSettings::IniFormat,QSettings::UserScope, "Triple Jim Software", "QYoutubeDownloader");
+
+    resize(settings.value("MainWindow/size", QSize(400, 400)).toSize());
+    move(settings.value("MainWindow/pos", QPoint(200, 200)).toPoint());
+    ui->editDownloadPath->setText(settings.value("main/DownloadPath").toString()); //);
+    if (settings.value("main/ShowDetails").toBool()) ui->textDetails->show(); else ui->textDetails->hide();
+    ui->editSearch->setText(settings.value("main/LastSearch").toString());
+    ui->comboSortType->setCurrentIndex(settings.value("main/comboSortType").toInt());
+
+    // it doesn't yet load the download queue.
+}
+
+void MainWindow::save_settings()
+{
+    QSettings settings(QSettings::IniFormat,QSettings::UserScope, "Triple Jim Software", "QYoutubeDownloader");
+
+    settings.setValue("MainWindow/size", size());
+    settings.setValue("MainWindow/pos", pos());
+    QDir dir (ui->editDownloadPath->text());
+    if (dir.exists()) settings.setValue("main/DownloadPath",ui->editDownloadPath->text());
+    if (ui->textDetails->isHidden()) settings.setValue("main/ShowDetails",false); else settings.setValue("main/ShowDetails",true);
+    settings.setValue("main/LastSearch",ui->editSearch->text());
+    settings.setValue("main/comboSortType",ui->comboSortType->currentIndex());
+
+    // it doesn't yet save the download queue.
 }
 
 void MainWindow::open_video() // Requires the path to a media player.
@@ -25,7 +58,7 @@ void MainWindow::open_video() // Requires the path to a media player.
                               // But WORKS if you hard-code the path, etc.
 {
     QListWidgetItem *item = ui->listVideos->currentItem();
-    QString program = "/usr/bin/mpv";// :/x64/Media Player Classic Home Cinema/mpc-hc64.exe"; // path to media player
+    QString program = "/usr/bin/mpv";// f:/x64/Media Player Classic Home Cinema/mpc-hc64.exe"; // path to media player
     QFile check;
     check.setFileName(program);
     //if (check.exists()==false) return;
@@ -70,7 +103,7 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
                 {
-                    if (ui->radioAudioVideo->isChecked()) // Download Audio + video
+                    if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==0) // Download Audio + video
                         download_progress = 2;
                     else // Download Audio
                         download_progress = 4;
@@ -144,7 +177,7 @@ void MainWindow::fix_download_path()
         ui->editDownloadPath->setText(dir+'/');
 }
 
-void MainWindow::download_top_video()
+void MainWindow::download_top_video(available_formats format)
 {
     if (ui->listVideoQueue->count()==0) return; // quits if the list is empty
 
@@ -152,15 +185,18 @@ void MainWindow::download_top_video()
     if (dir.exists()==false || ui->editDownloadPath->text()=="") { QMessageBox message; message.setWindowTitle("Invalid folder.");
                                message.setText("The download folder is invalid."); message.exec();
                                return; }
-    fix_download_path(); // must happen AFTER the above check, because QDir::cleanPath could cause a crash if the path is invalid.
+    fix_download_path(); // must happen AFTER the above check, because QDir::cleanPath causes a crash if the path is empty.
 
     QString program = "youtube-dl";
     QStringList arguments;
     QListWidgetItem* item = ui->listVideoQueue->item(0);
 
-    QString format_to_download = "bestvideo+bestaudio";
-    if (ui->radioAudioOnly->isChecked())
-        format_to_download = "bestaudio";
+    QString format_to_download;
+    switch (format)
+    {
+        case 1: format_to_download = "bestaudio"; break;
+        default: format_to_download = "bestvideo+bestaudio"; break;
+    }
 
     arguments << item->text() << "-o" << ui->editDownloadPath->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << format_to_download;
 
@@ -195,6 +231,14 @@ void MainWindow::add_video_to_download_list()
     {
         QString item_name = dialog1.user_input;
         QListWidgetItem *item = new QListWidgetItem(item_name);
+        item->setData(Qt::UserRole,dialog1.format_to_download);
+
+        switch (dialog1.format_to_download)
+        {
+            case 0: item->setData(Qt::DisplayRole,item_name+" | Video+Audio"); break;
+            case 1: item->setData(Qt::DisplayRole,item_name+" | Audio"); break;
+        }
+
         ui->listVideoQueue->addItem(item);
     }
 }
@@ -202,6 +246,8 @@ void MainWindow::add_video_to_download_list()
 void MainWindow::add_video_to_download_list_from_outside(QString url)
 {
     QListWidgetItem *item = new QListWidgetItem(url);
+    item->setData(Qt::UserRole,0);
+    item->setData(Qt::DisplayRole,url+" | Video+Audio");
     ui->listVideoQueue->addItem(item);
 }
 
@@ -250,7 +296,11 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
     refresh_filelist_filtering();
     QListWidgetItem *item = ui->listVideoQueue->item(0);
     delete item;
-    if (ui->listVideoQueue->count()>0) { download_top_video(); return; }
+    if (ui->listVideoQueue->count()>0) {
+                                        if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==0) download_top_video(bestvideo_bestaudio);
+                                        else if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==1) download_top_video(bestaudio);
+                                        return;
+                                       }
     ui->progressVideo->hide(); // will only hide progressbars if there are no more videos to download.
     ui->progressAudio->hide();
     ui->labelVideo->hide();
@@ -260,8 +310,12 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
 
 void MainWindow::on_btnStartDownload_clicked() // start downloading
 {
+    if (ui->listVideoQueue->count()==0) return;
     if (download_progress==0)
-        download_top_video();
+    {
+        if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==0) download_top_video(bestvideo_bestaudio);
+        else if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==1) download_top_video(bestaudio);
+    }
     else
         stop_downloading();
 }
@@ -309,4 +363,11 @@ void MainWindow::on_comboSortType_currentIndexChanged() // new type of sorting
     refresh_filelist();
     refresh_filelist_filtering();
     check_download_path();
+}
+
+void MainWindow::on_actionSettings_Menu_triggered()
+{
+    SettingsWindow window;
+    window.setModal(false);
+    window.exec();
 }

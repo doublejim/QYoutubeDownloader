@@ -16,4 +16,7 @@ DialogNewDownload::~DialogNewDownload()
 void DialogNewDownload::on_btnboxOkCancel_accepted()
 {
     user_input = ui->editUserInput->text();
+    if (ui->radioVideoAudio->isChecked())
+         format_to_download = 0;
+    else format_to_download = 1;
 }
