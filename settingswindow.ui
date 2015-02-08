@@ -23,12 +23,12 @@
       <attribute name="title">
        <string>General</string>
       </attribute>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>30</y>
-         <width>453</width>
+         <width>467</width>
          <height>42</height>
         </rect>
        </property>
@@ -36,14 +36,14 @@
         <item>
          <widget class="QCheckBox" name="checkAlwaysHideDetails">
           <property name="text">
-           <string>Hide the option of showing details. (NOT WORKING YET)</string>
+           <string>Hide the option of showing details.</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="checkAutoDownload">
           <property name="text">
-           <string>Automatically start downloading when there's a video in the queue. (NOT WORKING YET)</string>
+           <string>Automatically start downloading when there's a video in the queue.</string>
           </property>
          </widget>
         </item>

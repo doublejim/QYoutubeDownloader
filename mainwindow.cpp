@@ -7,7 +7,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-
     ui->progressVideo->hide();
     ui->progressAudio->hide();
     ui->labelVideo->hide();
@@ -37,6 +36,14 @@ void MainWindow::load_settings()
     ui->editSearch->setText(settings.value("main/LastSearch").toString());
     ui->comboSortType->setCurrentIndex(settings.value("main/comboSortType").toInt());
 
+    settingAlwaysHideDetails=settings.value("settings/AlwaysHideDetails").toBool();
+    settingAutoDownload=settings.value("settings/AutoDownload").toBool();
+
+    if (settingAlwaysHideDetails)
+    {
+        ui->btnToggleDetails->hide();
+        ui->textDetails->hide();
+    }
     // it doesn't yet load the download queue.
 }
 
@@ -52,6 +59,8 @@ void MainWindow::save_settings()
     settings.setValue("main/LastSearch",ui->editSearch->text());
     settings.setValue("main/comboSortType",ui->comboSortType->currentIndex());
 
+    settings.setValue("settings/AlwaysHideDetails",settingAlwaysHideDetails);
+    settings.setValue("settings/AutoDownload",settingAutoDownload);
     // it doesn't yet save the download queue.
 }
 
@@ -180,7 +189,7 @@ void MainWindow::fix_download_path()
         ui->editDownloadPath->setText(dir+'/');
 }
 
-void MainWindow::download_top_video(available_formats format)
+void MainWindow::download_top_video()
 {
     if (ui->listVideoQueue->count()==0) return; // quits if the list is empty
 
@@ -192,7 +201,9 @@ void MainWindow::download_top_video(available_formats format)
 
     QString program = "youtube-dl";
     QStringList arguments;
+
     QListWidgetItem* item = ui->listVideoQueue->item(0);
+    ushort format = ui->listVideoQueue->item(0)->data(Qt::UserRole).toInt();
 
     QString format_to_download;
     switch (format)
@@ -231,6 +242,15 @@ void MainWindow::stop_downloading()
     download_progress=0;
 }
 
+void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
+{
+    switch (item->data(Qt::UserRole).toInt())
+    {
+        case 0: item->setData(Qt::DisplayRole,item->text()+" | Video+Audio"); break;
+        case 1: item->setData(Qt::DisplayRole,item->text()+" | Audio"); break;
+    }
+}
+
 void MainWindow::add_video_to_download_list()
 {
     DialogNewDownload dialog1;
@@ -242,22 +262,22 @@ void MainWindow::add_video_to_download_list()
         QListWidgetItem *item = new QListWidgetItem(item_name);
         item->setData(Qt::UserRole,dialog1.format_to_download);
 
-        switch (dialog1.format_to_download)
-        {
-            case 0: item->setData(Qt::DisplayRole,item_name+" | Video+Audio"); break;
-            case 1: item->setData(Qt::DisplayRole,item_name+" | Audio"); break;
-        }
+        create_item_title_from_its_data(item);
 
         ui->listVideoQueue->addItem(item);
     }
+
+    if (settingAutoDownload && download_progress==0) download_top_video();
 }
 
 void MainWindow::add_video_to_download_list_from_outside(QString url)
 {
     QListWidgetItem *item = new QListWidgetItem(url);
     item->setData(Qt::UserRole,0);
-    item->setData(Qt::DisplayRole,url+" | Video+Audio");
+    create_item_title_from_its_data(item);
     ui->listVideoQueue->addItem(item);
+
+    if (settingAutoDownload && download_progress==0) download_top_video();
 }
 
 void MainWindow::refresh_filelist() // stores a list of filenames from the download path, in correct order, but doesn't show anything.
@@ -305,11 +325,7 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
     refresh_filelist_filtering();
     QListWidgetItem *item = ui->listVideoQueue->item(0);
     delete item;
-    if (ui->listVideoQueue->count()>0) {
-                                        if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==0) download_top_video(bestvideo_bestaudio);
-                                        else if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==1) download_top_video(bestaudio);
-                                        return;
-                                       }
+    if (ui->listVideoQueue->count()>0) { download_top_video(); return; }
     ui->progressVideo->hide(); // will only hide progressbars if there are no more videos to download.
     ui->progressAudio->hide();
     ui->labelVideo->hide();
@@ -321,10 +337,7 @@ void MainWindow::on_btnStartDownload_clicked() // start downloading
 {
     if (ui->listVideoQueue->count()==0) return;
     if (download_progress==0)
-    {
-        if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==0) download_top_video(bestvideo_bestaudio);
-        else if (ui->listVideoQueue->item(0)->data(Qt::UserRole)==1) download_top_video(bestaudio);
-    }
+        download_top_video();
     else
         stop_downloading();
 }
@@ -378,5 +391,13 @@ void MainWindow::on_actionSettings_Menu_triggered()
 {
     SettingsWindow window;
     window.setModal(false);
-    window.exec();
+    window.load_settings(&settingAlwaysHideDetails, &settingAutoDownload);
+    if (window.exec())
+        if (settingAlwaysHideDetails)
+        {
+            ui->btnToggleDetails->hide();
+            ui->textDetails->hide();
+        }
+        else
+            ui->btnToggleDetails->show();
 }

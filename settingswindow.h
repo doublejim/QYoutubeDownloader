@@ -2,6 +2,7 @@
 #define SETTINGSWINDOW_H
 
 #include <QDialog>
+#include <QAbstractButton>
 
 namespace Ui {
 class SettingsWindow;
@@ -14,9 +15,18 @@ class SettingsWindow : public QDialog
 public:
     explicit SettingsWindow(QWidget *parent = 0);
     ~SettingsWindow();
+    void load_settings(bool *getsetting_AlwaysHideDetails, bool *getsetting_AutoDownload);
+
+private slots:
+    void on_buttonBox_clicked(QAbstractButton *button);
+    void on_buttonBox_accepted();
+    void save();
 
 private:
     Ui::SettingsWindow *ui;
+
+    bool* settingAlwaysHideDetails;
+    bool* settingAutoDownload;
 };
 
 #endif // SETTINGSWINDOW_H
