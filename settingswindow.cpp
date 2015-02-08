@@ -16,19 +16,23 @@ SettingsWindow::~SettingsWindow()
     delete ui;
 }
 
-void SettingsWindow::load_settings(bool* getsetting_AlwaysHideDetails, bool* getsetting_AutoDownload)
+void SettingsWindow::load_settings(bool* getsetting_AlwaysHideDetails, bool* getsetting_AutoDownload, bool *getsetting_DarkStyle)
 {
     ui->checkAlwaysHideDetails->setChecked((*getsetting_AlwaysHideDetails));
     settingAlwaysHideDetails = getsetting_AlwaysHideDetails;
 
     ui->checkAutoDownload->setChecked((*getsetting_AutoDownload));
     settingAutoDownload = getsetting_AutoDownload;
+
+    ui->checkDarkStyle->setChecked((*getsetting_DarkStyle));
+    settingDarkStyle = getsetting_DarkStyle;
 }
 
 void SettingsWindow::save()
 {
     *settingAlwaysHideDetails = ui->checkAlwaysHideDetails->isChecked();
     *settingAutoDownload = ui->checkAutoDownload->isChecked();
+    *settingDarkStyle = ui->checkDarkStyle->isChecked();
 }
 
 void SettingsWindow::on_buttonBox_accepted()
