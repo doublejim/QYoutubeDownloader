@@ -12,6 +12,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QShortcut>
+#include <QSignalMapper>
 
 #include "queueitem.h"
 #include "dialognewdownload.h"
@@ -28,7 +29,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QApplication *qapp, QWidget *parent = 0);
     ~MainWindow();
-    void add_video_to_download_list_from_outside(QString url);
+    void add_video_to_download_list(QString url, uint format);
 
 private slots:
     void load_settings();
@@ -44,11 +45,9 @@ private slots:
     void select_directory();
     void refresh_interface();
     void download_top_video();
-    void add_video_to_download_list();
     void downloading_ended(int a);
     void create_item_title_from_its_data(QListWidgetItem* item);
-    //void video_title_resolved();
-    //void start_resolving_video_title(QLineEdit* return_title_to_this, QString url);
+    void video_title_resolved(int item_number);
 
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
@@ -68,6 +67,7 @@ private:
     QApplication *qapp_;
 
     void init_color_scheme();
+    void start_resolving_video_title(int list_row, QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl;

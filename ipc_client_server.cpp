@@ -144,7 +144,7 @@ void IPCClientServer::readMsg(QLocalSocket * socket_to_read)
         QStringList data =  recv.split('|');
         if (data[0] == QString("reply"))
         {
-            window->add_video_to_download_list_from_outside(data[1]);
+            window->add_video_to_download_list(data[1], uint(0));
         } else
         {
             debug("Malformed reply!");

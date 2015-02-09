@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     if(argc > 1)
     {
         youtube_url = argv[1];
-        w.add_video_to_download_list_from_outside(youtube_url);
+        w.add_video_to_download_list(youtube_url, uint(0));
     }
 
     IPCClientServer clientserver(&w, youtube_url);

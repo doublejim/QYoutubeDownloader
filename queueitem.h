@@ -9,6 +9,7 @@ class QueueItem
 {
 public:
     QString title = "";
+    QString url = "";
     ushort format = 0;
 
     uint setFormat(uint i);

@@ -233,28 +233,33 @@ void MainWindow::fix_download_path()
         ui->editDownloadPath->setText(dir+'/');
 }
 
-/*void MainWindow::video_title_resolved() //QLineEdit* return_title_to_this)
-{
-    QString newOutput = youtube_dl->readAllStandardOutput();
 
-    qDebug() << newOutput;
-    //return_title_to_this->setText(newOutput);
+void MainWindow::video_title_resolved(int item_number)
+{
+    QString new_title = youtube_dl->readAllStandardOutput().simplified();
+    QListWidgetItem *list_item = ui->listVideoQueue->item(item_number);
+
+    queue_items[item_number].title = new_title;
+    create_item_title_from_its_data(list_item);
 }
 
-void MainWindow::start_resolving_video_title(QLineEdit* return_title_to_this, QString url)
+void MainWindow::start_resolving_video_title(int item_number, QString url)
 {
-    if (url.startsWith("http://",Qt::CaseInsensitive)==false)
-    url="http://"+url; // else youtube-dl will print out a warning before the title.
-
     QString program = "youtube-dl";
     QStringList arguments;
     arguments << "-e" << url;
 
-    youtube_dl = new QProcess();
-    connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(video_title_resolved()));
+    youtube_dl = new QProcess(this);
+    QSignalMapper *mapper = new QSignalMapper(this);
 
-    youtube_dl->start(program,arguments);
-}*/
+    connect (youtube_dl, SIGNAL(readyReadStandardOutput()), mapper, SLOT(map()));
+    mapper->setMapping(youtube_dl, item_number);
+    connect (mapper, SIGNAL(mapped(int)), this, SLOT(video_title_resolved(int)));
+
+    youtube_dl->start(program, arguments);
+
+    return;
+}
 
 void MainWindow::download_top_video()
 {
@@ -280,7 +285,7 @@ void MainWindow::download_top_video()
         default: format_to_download = "bestvideo+bestaudio"; break;
     }
 
-    arguments << queue_items[current_item_key].title << "-o" << ui->editDownloadPath->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << format_to_download;
+    arguments << queue_items[current_item_key].url << "-o" << ui->editDownloadPath->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << format_to_download;
 
     youtube_dl = new QProcess(this);
     connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
@@ -337,46 +342,29 @@ void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
 {
     uint current_item_key = item->data(Qt::UserRole).toUInt();
 
-    ++queue_item_counter;
     switch (queue_items[current_item_key].format)
     {
         case 0: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Video+Audio"); break;
-        case 1: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Audio"); break;
+        case 1: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Audio only"); break;
     }
 }
 
-void MainWindow::add_video_to_download_list()
-{
-    DialogNewDownload dialog1;
-    dialog1.setWindowTitle("Download this video");
-    dialog1.setModal(true);
-    if (dialog1.exec())
-    { 
-        QString url = dialog1.user_input;
-        uint format = dialog1.format_to_download;
-
-        //start_resolving_video_title(ui->editSearch,url); // fix here
-        QListWidgetItem *item = new QListWidgetItem(url);
-        ++queue_item_counter;
-        item->setData(Qt::UserRole,queue_item_counter); // højeste nummer bliver til key
-        queue_items[queue_item_counter].setTitle(url);
-        queue_items[queue_item_counter].setFormat(format);
-        create_item_title_from_its_data(item);
-        ui->listVideoQueue->addItem(item);
-    }
-
-    if (settingAutoDownload && download_progress==0) download_top_video();
-}
-
-void MainWindow::add_video_to_download_list_from_outside(QString url)
+void MainWindow::add_video_to_download_list(QString url, uint format)
 {
     QListWidgetItem *item = new QListWidgetItem(url);
-    ++queue_item_counter;
-    item->setData(Qt::UserRole,queue_item_counter); // højeste nummer bliver til key
-    queue_items[queue_item_counter].setTitle(url);
-    queue_items[queue_item_counter].setFormat(uint(0)); // Video+Audio
+
+    item->setData(Qt::UserRole, queue_item_counter); // højeste nummer bliver til key
+
+    queue_items[queue_item_counter].url = url;
+    queue_items[queue_item_counter].title = url;
+    queue_items[queue_item_counter].format = format;
+
     create_item_title_from_its_data(item);
     ui->listVideoQueue->addItem(item);
+
+    start_resolving_video_title(queue_item_counter, url);
+
+    ++queue_item_counter;
 
     if (settingAutoDownload && download_progress==0) download_top_video();
 }
@@ -426,6 +414,7 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
     refresh_filelist_filtering();
     QListWidgetItem *item = ui->listVideoQueue->item(0);
     delete item;
+    --queue_item_counter;
     if (ui->listVideoQueue->count()>0) { download_top_video(); return; }
     ui->progressVideo->hide(); // will only hide progressbars if there are no more videos to download.
     ui->progressAudio->hide();
@@ -456,7 +445,15 @@ void MainWindow::on_btnToggleDetails_clicked() // toggle details
 
 void MainWindow::on_btnAddVideoToQueue_clicked() // add video to download list
 {
-    add_video_to_download_list();
+    DialogNewDownload dialog1;
+    dialog1.setWindowTitle("Download this video");
+    dialog1.setModal(true);
+    if (dialog1.exec())
+    {
+        QString url = dialog1.user_input;
+        uint format = dialog1.format_to_download;
+        add_video_to_download_list(url, format);
+    }
 }
 
 void MainWindow::on_editDownloadPath_textChanged() // download folder lineEdit box
