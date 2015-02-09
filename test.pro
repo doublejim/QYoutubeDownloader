@@ -17,12 +17,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     ipc_client_server.cpp \
     dialognewdownload.cpp \
-    settingswindow.cpp
+    settingswindow.cpp \
+    queueitem.cpp
 
 HEADERS  += mainwindow.h \
     ipc_client_server.h \
     dialognewdownload.h \
-    settingswindow.h
+    settingswindow.h \
+    queueitem.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \

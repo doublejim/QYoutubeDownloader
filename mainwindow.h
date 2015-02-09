@@ -13,6 +13,7 @@
 #include <QSettings>
 #include <QShortcut>
 
+#include "queueitem.h"
 #include "dialognewdownload.h"
 #include "settingswindow.h"
 
@@ -63,9 +64,12 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
+    QMap <unsigned int,QueueItem> queue_items;
+
     QProcess* youtube_dl;
     ushort download_progress = 0;
     QStringList complete_filelist;
+    unsigned int queue_item_counter = 0;
     bool going_to_play_video = false;
 
     bool settingAlwaysHideDetails = false;
