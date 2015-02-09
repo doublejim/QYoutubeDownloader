@@ -516,9 +516,14 @@ void MainWindow::customContextMenuRequested(QPoint pos)
 
 void MainWindow::toggle_download_format()
 {
+    QModelIndexList indexes = ui->listVideoQueue->selectionModel()->selectedIndexes();
     QListWidgetItem *item;
-    item = ui->listVideoQueue->item(ui->listVideoQueue->currentRow());
-    uint current_item_key = item->data(Qt::UserRole).toUInt();
-    queue_items[current_item_key].toggleFormat();
-    create_item_title_from_its_data(item);
+
+    foreach(QModelIndex index, indexes)
+    {
+        item = ui->listVideoQueue->item(index.row());
+        uint current_item_key = item->data(Qt::UserRole).toUInt();
+        queue_items[current_item_key].toggleFormat();
+        create_item_title_from_its_data(item);
+    }
 }
