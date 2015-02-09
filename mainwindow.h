@@ -29,7 +29,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QApplication *qapp, QWidget *parent = 0);
     ~MainWindow();
-    void add_video_to_download_list(QString url, uint format);
+    void add_video_to_download_list(QString url, uint format = 0);
 
 private slots:
     void load_settings();
