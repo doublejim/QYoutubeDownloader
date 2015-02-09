@@ -233,6 +233,29 @@ void MainWindow::fix_download_path()
         ui->editDownloadPath->setText(dir+'/');
 }
 
+/*void MainWindow::video_title_resolved() //QLineEdit* return_title_to_this)
+{
+    QString newOutput = youtube_dl->readAllStandardOutput();
+
+    qDebug() << newOutput;
+    //return_title_to_this->setText(newOutput);
+}
+
+void MainWindow::start_resolving_video_title(QLineEdit* return_title_to_this, QString url)
+{
+    if (url.startsWith("http://",Qt::CaseInsensitive)==false)
+    url="http://"+url; // else youtube-dl will print out a warning before the title.
+
+    QString program = "youtube-dl";
+    QStringList arguments;
+    arguments << "-e" << url;
+
+    youtube_dl = new QProcess();
+    connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(video_title_resolved()));
+
+    youtube_dl->start(program,arguments);
+}*/
+
 void MainWindow::download_top_video()
 {
     if (ui->listVideoQueue->count()==0) return; // quits if the list is empty
@@ -247,7 +270,7 @@ void MainWindow::download_top_video()
     QStringList arguments;
 
     QListWidgetItem* current_item = ui->listVideoQueue->item(0);
-    uint current_item_key = ui->listVideoQueue->item(0)->data(Qt::UserRole).toUInt();
+    uint current_item_key = current_item->data(Qt::UserRole).toUInt();
     ushort format = queue_items[current_item_key].format;
 
     QString format_to_download;
@@ -257,7 +280,7 @@ void MainWindow::download_top_video()
         default: format_to_download = "bestvideo+bestaudio"; break;
     }
 
-    arguments << current_item->text() << "-o" << ui->editDownloadPath->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << format_to_download;
+    arguments << queue_items[current_item_key].title << "-o" << ui->editDownloadPath->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << format_to_download;
 
     youtube_dl = new QProcess(this);
     connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
@@ -283,6 +306,7 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
     uint current_item_key = item->data(Qt::UserRole).toUInt();
 
     dialog1.load(queue_items[current_item_key].title , queue_items[current_item_key].format);
+    // the solution to loading the settings should also be applied here!
 
     if (dialog1.exec())
     {
@@ -327,9 +351,11 @@ void MainWindow::add_video_to_download_list()
     dialog1.setWindowTitle("Download this video");
     dialog1.setModal(true);
     if (dialog1.exec())
-    {
+    { 
         QString url = dialog1.user_input;
         uint format = dialog1.format_to_download;
+
+        //start_resolving_video_title(ui->editSearch,url); // fix here
         QListWidgetItem *item = new QListWidgetItem(url);
         ++queue_item_counter;
         item->setData(Qt::UserRole,queue_item_counter); // højeste nummer bliver til key

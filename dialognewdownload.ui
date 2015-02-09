@@ -49,6 +49,16 @@
     </layout>
    </item>
    <item>
+    <widget class="QLineEdit" name="editVideoTitle">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Placeholder for showing video title.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="btnboxOkCancel">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

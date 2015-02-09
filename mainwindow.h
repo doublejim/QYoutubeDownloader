@@ -47,6 +47,8 @@ private slots:
     void add_video_to_download_list();
     void downloading_ended(int a);
     void create_item_title_from_its_data(QListWidgetItem* item);
+    //void video_title_resolved();
+    //void start_resolving_video_title(QLineEdit* return_title_to_this, QString url);
 
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
