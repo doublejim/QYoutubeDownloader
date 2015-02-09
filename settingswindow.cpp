@@ -18,6 +18,8 @@ SettingsWindow::~SettingsWindow()
 
 void SettingsWindow::load_settings(bool* getsetting_AlwaysHideDetails, bool* getsetting_AutoDownload, bool *getsetting_DarkStyle)
 {
+    // yes, this is boring. Must fix in future.
+
     ui->checkAlwaysHideDetails->setChecked((*getsetting_AlwaysHideDetails));
     settingAlwaysHideDetails = getsetting_AlwaysHideDetails;
 

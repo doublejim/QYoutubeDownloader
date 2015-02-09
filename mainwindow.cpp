@@ -158,8 +158,8 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
                 {
-                    uint current_item_data = ui->listVideoQueue->item(0)->data(Qt::UserRole).toUInt();
-                    if (queue_items[current_item_data].format==0)  // Download Audio + video
+                    uint current_item_key = ui->listVideoQueue->item(0)->data(Qt::UserRole).toUInt();
+                    if (queue_items[current_item_key].format==0)  // Download Audio + video
                         download_progress = 2;
                     else // Download Audio
                         download_progress = 4;
@@ -247,8 +247,8 @@ void MainWindow::download_top_video()
     QStringList arguments;
 
     QListWidgetItem* current_item = ui->listVideoQueue->item(0);
-    uint current_item_data = ui->listVideoQueue->item(0)->data(Qt::UserRole).toUInt();
-    ushort format = queue_items[current_item_data].format;
+    uint current_item_key = ui->listVideoQueue->item(0)->data(Qt::UserRole).toUInt();
+    ushort format = queue_items[current_item_key].format;
 
     QString format_to_download;
     switch (format)
@@ -274,6 +274,29 @@ void MainWindow::download_top_video()
     youtube_dl->start(program,arguments);
 }
 
+void MainWindow::on_listVideoQueue_doubleClicked() // edit item
+{
+    DialogNewDownload dialog1;
+    dialog1.setWindowTitle("Download this video");
+    dialog1.setModal(true);
+    QListWidgetItem *item = ui->listVideoQueue->item( ui->listVideoQueue->currentRow() );
+    uint current_item_key = item->data(Qt::UserRole).toUInt();
+
+    dialog1.load(queue_items[current_item_key].title , queue_items[current_item_key].format);
+
+    if (dialog1.exec())
+    {
+        QString url = dialog1.user_input;
+        uint format = dialog1.format_to_download;
+        queue_items[current_item_key].setTitle(url);
+        queue_items[current_item_key].setFormat(format);
+        create_item_title_from_its_data(item);
+        ui->listVideoQueue->addItem(item);
+    }
+
+    if (settingAutoDownload && download_progress==0) download_top_video();
+}
+
 void MainWindow::delete_selected_item_on_queue()
 {
     delete ui->listVideoQueue->currentItem();
@@ -288,13 +311,13 @@ void MainWindow::stop_downloading()
 
 void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
 {
-    uint current_item_data = item->data(Qt::UserRole).toUInt();
+    uint current_item_key = item->data(Qt::UserRole).toUInt();
 
     ++queue_item_counter;
-    switch (queue_items[current_item_data].format)
+    switch (queue_items[current_item_key].format)
     {
-        case 0: item->setData(Qt::DisplayRole,queue_items[current_item_data].title+" | Video+Audio"); break;
-        case 1: item->setData(Qt::DisplayRole,queue_items[current_item_data].title+" | Audio"); break;
+        case 0: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Video+Audio"); break;
+        case 1: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Audio"); break;
     }
 }
 
@@ -472,7 +495,7 @@ void MainWindow::toggle_download_format()
 {
     QListWidgetItem *item;
     item = ui->listVideoQueue->item(ui->listVideoQueue->currentRow());
-    uint current_item_data = item->data(Qt::UserRole).toUInt();
-    queue_items[current_item_data].toggleFormat();
+    uint current_item_key = item->data(Qt::UserRole).toUInt();
+    queue_items[current_item_key].toggleFormat();
     create_item_title_from_its_data(item);
 }

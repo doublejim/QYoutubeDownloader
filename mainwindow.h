@@ -56,10 +56,10 @@ private slots:
     void on_listVideos_doubleClicked();
     void on_editSearch_textChanged();
     void on_comboSortType_currentIndexChanged();
-
     void on_actionSettings_Menu_triggered();
     void customContextMenuRequested(QPoint);
     void toggle_download_format();
+    void on_listVideoQueue_doubleClicked();
 
 private:
     Ui::MainWindow *ui;
@@ -67,7 +67,7 @@ private:
 
     void init_color_scheme();
 
-    QMap <unsigned int,QueueItem> queue_items;
+    QMap <uint,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl;
     ushort download_progress = 0;
     QStringList complete_filelist;

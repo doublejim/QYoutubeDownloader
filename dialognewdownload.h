@@ -16,6 +16,7 @@ public:
     ~DialogNewDownload();
     QString user_input;
     ushort format_to_download;
+    void load(QString url, ushort format_to_download);
 
 private slots:
     void on_btnboxOkCancel_accepted();

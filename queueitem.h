@@ -12,7 +12,6 @@ public:
     ushort format = 0;
 
     uint setFormat(uint i);
-
     QString setTitle(QString& newtitle);
     void toggleFormat();
 };
