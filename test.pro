@@ -13,6 +13,8 @@ TEMPLATE = app
 
 CONFIG += c++11
 
+RESOURCES += style.qrc
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     ipc_client_server.cpp \

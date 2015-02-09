@@ -1,9 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-using namespace std;
+//using namespace std;
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
+    qapp_(qapp),
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -15,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->labelAudio->hide();
 
     load_settings();
+    init_color_scheme();
+
     if (ui->editDownloadPath->text()=="")  ui->editDownloadPath->setText(".");
 
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->listVideoQueue);
@@ -41,8 +44,9 @@ void MainWindow::load_settings()
     ui->editSearch->setText(settings.value("main/LastSearch").toString());
     ui->comboSortType->setCurrentIndex(settings.value("main/comboSortType").toInt());
 
-    settingAlwaysHideDetails=settings.value("settings/AlwaysHideDetails").toBool();
-    settingAutoDownload=settings.value("settings/AutoDownload").toBool();
+    settingAlwaysHideDetails = settings.value("settings/AlwaysHideDetails").toBool();
+    settingAutoDownload = settings.value("settings/AutoDownload").toBool();
+    settingDarkStyle = settings.value("settings/DarkStyle").toBool();
 
     if (settingAlwaysHideDetails)
     {
@@ -59,20 +63,54 @@ void MainWindow::save_settings()
     settings.setValue("MainWindow/size", size());
     settings.setValue("MainWindow/pos", pos());
     QDir dir (ui->editDownloadPath->text());
-    if (dir.exists()) settings.setValue("main/DownloadPath",ui->editDownloadPath->text());
-    if (ui->textDetails->isHidden()) settings.setValue("main/ShowDetails",false); else settings.setValue("main/ShowDetails",true);
-    settings.setValue("main/LastSearch",ui->editSearch->text());
-    settings.setValue("main/comboSortType",ui->comboSortType->currentIndex());
 
-    settings.setValue("settings/AlwaysHideDetails",settingAlwaysHideDetails);
-    settings.setValue("settings/AutoDownload",settingAutoDownload);
+    if (dir.exists())
+        settings.setValue("main/DownloadPath", ui->editDownloadPath->text());
+
+    if (ui->textDetails->isHidden())
+        settings.setValue("main/ShowDetails", false);
+    else
+        settings.setValue("main/ShowDetails", true);
+
+    settings.setValue("main/LastSearch", ui->editSearch->text());
+    settings.setValue("main/comboSortType", ui->comboSortType->currentIndex());
+
+    settings.setValue("settings/AlwaysHideDetails", settingAlwaysHideDetails);
+    settings.setValue("settings/AutoDownload", settingAutoDownload);
+    settings.setValue("settings/DarkStyle", settingDarkStyle);
     // it doesn't yet save the download queue.
 }
 
-void MainWindow::open_video() // Requires the path to a media player.
-                              // Right now, completely inflexible.
-                              // Should be configured via a settings menu instead.
-                              // But WORKS if you hard-code the path, etc.
+void MainWindow::init_color_scheme()
+{
+    if(settingDarkStyle)
+    {
+        QFile f(":qdarkstyle/style.qss");
+        if (!f.exists())
+        {
+            printf("Unable to set stylesheet, file not found\n");
+        }
+        else
+        {
+            f.open(QFile::ReadOnly | QFile::Text);
+            QTextStream ts(&f);
+            qapp_->setStyleSheet(ts.readAll());
+        }
+    }
+    else
+    {
+        qapp_->setStyleSheet("fusion");
+    }
+}
+
+// Requires the path to a media player.
+// Right now, completely inflexible.
+// Should be configured via a settings menu instead.
+// But WORKS if you hard-code the path, etc.
+//
+// TODO: fix this method. Doesn't seem to work on linux.
+// looks okay though.
+void MainWindow::open_video()
 {
     QListWidgetItem *item = ui->listVideos->currentItem();
     QString program = "/usr/bin/mpv";// f:/x64/Media Player Classic Home Cinema/mpc-hc64.exe"; // path to media player
@@ -80,10 +118,10 @@ void MainWindow::open_video() // Requires the path to a media player.
     check.setFileName(program);
     //if (check.exists()==false) return;
     QStringList arguments;
-    arguments << '\"'+ui->editDownloadPath->text()+item->text()+'\"';
+    arguments << '\"' + ui->editDownloadPath->text() + item->text() + '\"';
     QProcess* play_video = new QProcess();
-    play_video->start(program,arguments);
-    going_to_play_video=false; //(it already did at this point)
+    play_video->start(program, arguments);
+    going_to_play_video = false; //(it already did at this point)
 }
 
 void MainWindow::select_directory()
@@ -405,8 +443,9 @@ void MainWindow::on_actionSettings_Menu_triggered()
 {
     SettingsWindow window;
     window.setModal(false);
-    window.load_settings(&settingAlwaysHideDetails, &settingAutoDownload);
+    window.load_settings(&settingAlwaysHideDetails, &settingAutoDownload, &settingDarkStyle);
     if (window.exec())
+    {
         if (settingAlwaysHideDetails)
         {
             ui->btnToggleDetails->hide();
@@ -414,6 +453,9 @@ void MainWindow::on_actionSettings_Menu_triggered()
         }
         else
             ui->btnToggleDetails->show();
+
+        init_color_scheme();
+    }
 }
 
 void MainWindow::customContextMenuRequested(QPoint pos)

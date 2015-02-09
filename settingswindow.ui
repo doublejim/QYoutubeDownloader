@@ -29,7 +29,7 @@
          <x>10</x>
          <y>30</y>
          <width>467</width>
-         <height>42</height>
+         <height>73</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -44,6 +44,13 @@
          <widget class="QCheckBox" name="checkAutoDownload">
           <property name="text">
            <string>Automatically start downloading when there's a video in the queue.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkDarkStyle">
+          <property name="text">
+           <string>Dark color theme</string>
           </property>
          </widget>
         </item>

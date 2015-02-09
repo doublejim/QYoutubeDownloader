@@ -15,7 +15,7 @@ class SettingsWindow : public QDialog
 public:
     explicit SettingsWindow(QWidget *parent = 0);
     ~SettingsWindow();
-    void load_settings(bool *getsetting_AlwaysHideDetails, bool *getsetting_AutoDownload);
+    void load_settings(bool *getsetting_AlwaysHideDetails, bool *getsetting_AutoDownload, bool *getsetting_DarkStyle);
 
 private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
@@ -27,6 +27,7 @@ private:
 
     bool* settingAlwaysHideDetails;
     bool* settingAutoDownload;
+    bool* settingDarkStyle;
 };
 
 #endif // SETTINGSWINDOW_H

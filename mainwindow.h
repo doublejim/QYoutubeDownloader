@@ -26,7 +26,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QApplication *qapp, QWidget *parent = 0);
     ~MainWindow();
     void add_video_to_download_list_from_outside(QString url);
 
@@ -63,9 +63,11 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QApplication *qapp_;
+
+    void init_color_scheme();
 
     QMap <unsigned int,QueueItem> queue_items;
-
     QProcess* youtube_dl;
     ushort download_progress = 0;
     QStringList complete_filelist;
@@ -74,6 +76,7 @@ private:
 
     bool settingAlwaysHideDetails = false;
     bool settingAutoDownload = false;
+    bool settingDarkStyle = false;
 };
 
 #endif // MAINWINDOW_H
