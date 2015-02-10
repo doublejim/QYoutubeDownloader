@@ -1,33 +1,35 @@
 #ifndef SETTINGSWINDOW_H
 #define SETTINGSWINDOW_H
-
 #include <QDialog>
 #include <QAbstractButton>
 
-namespace Ui {
-class SettingsWindow;
+namespace Ui
+{
+    class SettingsWindow;
 }
+
+// These two must be forward declared to be able to create pointers to them
+class MainWindow;
+class Settings;
 
 class SettingsWindow : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit SettingsWindow(QWidget *parent = 0);
+    explicit SettingsWindow(MainWindow *main_window, QWidget *parent = 0);
     ~SettingsWindow();
-    void load_settings(bool *getsetting_AlwaysHideDetails, bool *getsetting_AutoDownload, bool *getsetting_DarkStyle);
+    Settings *settings; // I put i here, so it is similar to mainwindow
 
 private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
     void on_buttonBox_accepted();
+    void load_settings();
     void save();
 
 private:
     Ui::SettingsWindow *ui;
-
-    bool* settingAlwaysHideDetails;
-    bool* settingAutoDownload;
-    bool* settingDarkStyle;
+    MainWindow *main_window_;
 };
 
 #endif // SETTINGSWINDOW_H

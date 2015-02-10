@@ -2,11 +2,16 @@
 #include "settingswindow.h"
 #include "ui_settingswindow.h"
 
-SettingsWindow::SettingsWindow(QWidget *parent) :
+#include "mainwindow.h" // This can't be in settingswindow.h, because mainwindow.h includes settingswindow.h
+
+SettingsWindow::SettingsWindow(MainWindow *main_window, QWidget *parent) :
+    main_window_(main_window),
+    settings(main_window->settings),
     QDialog(parent),
     ui(new Ui::SettingsWindow)
 {
     ui->setupUi(this);
+    load_settings();
 
     //connect(ui->buttonBox,SIGNAL(clicked(QAbstractButton*)),this,SLOT(on_buttonBox_apply()));
 }
@@ -16,25 +21,20 @@ SettingsWindow::~SettingsWindow()
     delete ui;
 }
 
-void SettingsWindow::load_settings(bool* getsetting_AlwaysHideDetails, bool* getsetting_AutoDownload, bool *getsetting_DarkStyle)
+void SettingsWindow::load_settings()
 {
-    // yes, this is boring. Must fix in future.
-
-    ui->checkAlwaysHideDetails->setChecked((*getsetting_AlwaysHideDetails));
-    settingAlwaysHideDetails = getsetting_AlwaysHideDetails;
-
-    ui->checkAutoDownload->setChecked((*getsetting_AutoDownload));
-    settingAutoDownload = getsetting_AutoDownload;
-
-    ui->checkDarkStyle->setChecked((*getsetting_DarkStyle));
-    settingDarkStyle = getsetting_DarkStyle;
+    ui->checkAlwaysHideDetails->setChecked(settings->always_hide_details());
+    ui->checkAutoDownload->setChecked(settings->auto_download());
+    ui->checkDarkStyle->setChecked(settings->dark_style());
 }
 
 void SettingsWindow::save()
 {
-    *settingAlwaysHideDetails = ui->checkAlwaysHideDetails->isChecked();
-    *settingAutoDownload = ui->checkAutoDownload->isChecked();
-    *settingDarkStyle = ui->checkDarkStyle->isChecked();
+    settings->setAlways_hide_details(ui->checkAlwaysHideDetails->isChecked());
+    settings->setAuto_download(ui->checkAutoDownload->isChecked());
+    settings->setDark_style(ui->checkDarkStyle->isChecked());
+
+    main_window_->apply_settings();
 }
 
 void SettingsWindow::on_buttonBox_accepted()

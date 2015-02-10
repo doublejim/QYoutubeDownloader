@@ -10,13 +10,13 @@
 #include <QListWidgetItem>
 #include <QDebug>
 #include <QMessageBox>
-#include <QSettings>
 #include <QShortcut>
 #include <QSignalMapper>
 
+#include "settingswindow.h"
+#include "settings.h"
 #include "queueitem.h"
 #include "dialognewdownload.h"
-#include "settingswindow.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,11 +30,11 @@ public:
     explicit MainWindow(QApplication *qapp, QWidget *parent = 0);
     ~MainWindow();
     void add_video_to_download_list(QString url, uint format = 0);
+    Settings *settings;
+    void apply_settings();
+    bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
 
 private slots:
-    void load_settings();
-    void save_settings();
-
     void check_download_path();
     void fix_download_path();
     void stop_downloading();
@@ -67,6 +67,8 @@ private:
     QApplication *qapp_;
 
     void init_color_scheme();
+    void save_settings();
+    void restore_settings();
     void start_resolving_video_title(int list_row, QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
@@ -75,10 +77,6 @@ private:
     QStringList complete_filelist;
     unsigned int queue_item_counter = 0;
     bool going_to_play_video = false;
-
-    bool settingAlwaysHideDetails = false;
-    bool settingAutoDownload = false;
-    bool settingDarkStyle = false;
 };
 
 #endif // MAINWINDOW_H

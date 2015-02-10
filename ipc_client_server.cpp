@@ -39,6 +39,7 @@ void IPCClientServer::sendReply()
 {
     debug(__func__);
     sendMsg(server_reply, QString("reply|" + youtube_url));
+    window->do_not_save_settings = true;
     window->close();
 }
 

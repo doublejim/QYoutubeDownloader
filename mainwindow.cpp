@@ -15,8 +15,8 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     ui->labelVideo->hide();
     ui->labelAudio->hide();
 
-    load_settings();
-    init_color_scheme();
+    settings = new Settings();
+    restore_settings();
 
     if (ui->editDownloadPath->text()=="")  ui->editDownloadPath->setText(".");
 
@@ -29,61 +29,76 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    save_settings();
+    if(!do_not_save_settings)
+    {
+        save_settings();
+        delete settings; //sync() settings_
+    }
     delete ui;
 }
 
-void MainWindow::load_settings()
+
+//Settings that should be applied on program start
+void MainWindow::restore_settings()
 {
-    QSettings settings(QSettings::IniFormat,QSettings::UserScope, "Triple Jim Software", "QYoutubeDownloader");
+    resize(settings->size());
+    move(settings->position());
+    ui->editDownloadPath->setText(settings->download_path()); //);
+    apply_settings();
+}
 
-    resize(settings.value("MainWindow/size", QSize(400, 400)).toSize());
-    move(settings.value("MainWindow/pos", QPoint(200, 200)).toPoint());
-    ui->editDownloadPath->setText(settings.value("main/DownloadPath").toString()); //);
-    if (settings.value("main/ShowDetails").toBool()) ui->textDetails->show(); else ui->textDetails->hide();
-    ui->editSearch->setText(settings.value("main/LastSearch").toString());
-    ui->comboSortType->setCurrentIndex(settings.value("main/comboSortType").toInt());
+// Settings that should be applied on while program is running
+// This function is also called fra the settings window, whenever ok or apply is pressed
+void MainWindow::apply_settings()
+{
+    if (settings->expand_details())
+        ui->textDetails->show();
+    else
+        ui->textDetails->hide();
 
-    settingAlwaysHideDetails = settings.value("settings/AlwaysHideDetails").toBool();
-    settingAutoDownload = settings.value("settings/AutoDownload").toBool();
-    settingDarkStyle = settings.value("settings/DarkStyle").toBool();
+    ui->editSearch->setText(settings->last_search());
+    ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
 
-    if (settingAlwaysHideDetails)
+    if (settings->always_hide_details())
     {
         ui->btnToggleDetails->hide();
         ui->textDetails->hide();
     }
+    else
+    {
+        ui->btnToggleDetails->show();
+    }
+
+    init_color_scheme();
     // it doesn't yet load the download queue.
 }
 
 void MainWindow::save_settings()
 {
-    QSettings settings(QSettings::IniFormat,QSettings::UserScope, "Triple Jim Software", "QYoutubeDownloader");
+    qDebug() << __func__;
+    settings->setSize(size());
+    settings->setPosition(pos());
 
-    settings.setValue("MainWindow/size", size());
-    settings.setValue("MainWindow/pos", pos());
     QDir dir (ui->editDownloadPath->text());
 
     if (dir.exists())
-        settings.setValue("main/DownloadPath", ui->editDownloadPath->text());
+        settings->setDownload_path(dir.path());
 
-    if (ui->textDetails->isHidden())
-        settings.setValue("main/ShowDetails", false);
-    else
-        settings.setValue("main/ShowDetails", true);
+    settings->setExpand_details(ui->textDetails->isHidden());
 
-    settings.setValue("main/LastSearch", ui->editSearch->text());
-    settings.setValue("main/comboSortType", ui->comboSortType->currentIndex());
+    settings->setLast_search(ui->editSearch->text());
+    settings->setCombo_sort_type(ui->comboSortType->currentIndex());
 
-    settings.setValue("settings/AlwaysHideDetails", settingAlwaysHideDetails);
-    settings.setValue("settings/AutoDownload", settingAutoDownload);
-    settings.setValue("settings/DarkStyle", settingDarkStyle);
+//    settings.setValue("settings/AlwaysHideDetails", settingAlwaysHideDetails);
+//    settings.setValue("settings/AutoDownload", settingAutoDownload);
+//    settings.setValue("settings/DarkStyle", settingDarkStyle);
     // it doesn't yet save the download queue.
 }
 
+
 void MainWindow::init_color_scheme()
 {
-    if(settingDarkStyle)
+    if(settings->dark_style())
     {
         QFile f(":qdarkstyle/style.qss");
         if (!f.exists())
@@ -141,7 +156,7 @@ void MainWindow::select_directory()
 
     if (dialog.exec())
     {
-    ui->editDownloadPath->setText(dialog.directory().path());
+        ui->editDownloadPath->setText(dialog.directory().path());
     }
 }
 
@@ -323,7 +338,7 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
         ui->listVideoQueue->addItem(item);
     }
 
-    if (settingAutoDownload && download_progress==0) download_top_video();
+    if (settings->auto_download() && download_progress==0) download_top_video();
 }
 
 void MainWindow::delete_selected_item_on_queue()
@@ -366,7 +381,7 @@ void MainWindow::add_video_to_download_list(QString url, uint format)
 
     ++queue_item_counter;
 
-    if (settingAutoDownload && download_progress==0) download_top_video();
+    if (settings->auto_download() && download_progress==0) download_top_video();
 }
 
 void MainWindow::refresh_filelist() // stores a list of filenames from the download path, in correct order, but doesn't show anything.
@@ -487,21 +502,9 @@ void MainWindow::on_comboSortType_currentIndexChanged() // new type of sorting
 
 void MainWindow::on_actionSettings_Menu_triggered()
 {
-    SettingsWindow window;
+    SettingsWindow window(this);
     window.setModal(false);
-    window.load_settings(&settingAlwaysHideDetails, &settingAutoDownload, &settingDarkStyle);
-    if (window.exec())
-    {
-        if (settingAlwaysHideDetails)
-        {
-            ui->btnToggleDetails->hide();
-            ui->textDetails->hide();
-        }
-        else
-            ui->btnToggleDetails->show();
-
-        init_color_scheme();
-    }
+    window.exec();
 }
 
 void MainWindow::customContextMenuRequested(QPoint pos)
