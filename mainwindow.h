@@ -47,7 +47,7 @@ private slots:
     void download_top_video();
     void downloading_ended(int a);
     void create_item_title_from_its_data(QListWidgetItem* item);
-    void video_title_resolved(int item_number);
+    void video_title_resolved(uint item_key);
 
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
@@ -69,13 +69,13 @@ private:
     void init_color_scheme();
     void save_settings();
     void restore_settings();
-    void start_resolving_video_title(int list_row, QString url);
+    void start_resolving_video_title(uint item_key, QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl;
     ushort download_progress = 0;
     QStringList complete_filelist;
-    unsigned int queue_item_counter = 0;
+    unsigned int unique_item_key = 0;
     bool going_to_play_video = false;
 };
 

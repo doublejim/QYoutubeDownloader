@@ -249,13 +249,13 @@ void MainWindow::fix_download_path()
 }
 
 
-void MainWindow::video_title_resolved(int item_key)
+void MainWindow::video_title_resolved(uint item_key)
 {
     QString new_title = youtube_dl->readAllStandardOutput().simplified();
     for (int i=0; i<ui->listVideoQueue->count(); ++i)
     {
         QListWidgetItem *list_item = ui->listVideoQueue->item(i);
-        if (list_item->data(Qt::UserRole)==item_key)
+        if (list_item->data(Qt::UserRole).toUInt()==item_key)
         {
             queue_items[item_key].title=new_title;
             create_item_title_from_its_data(list_item);
@@ -264,7 +264,7 @@ void MainWindow::video_title_resolved(int item_key)
     }
 }
 
-void MainWindow::start_resolving_video_title(int item_key, QString url)
+void MainWindow::start_resolving_video_title(uint item_key, QString url)
 {
     QString program = "youtube-dl";
     QStringList arguments;
@@ -275,7 +275,7 @@ void MainWindow::start_resolving_video_title(int item_key, QString url)
 
     connect (youtube_dl, SIGNAL(readyReadStandardOutput()), mapper, SLOT(map()));
     mapper->setMapping(youtube_dl, item_key);
-    connect (mapper, SIGNAL(mapped(int)), this, SLOT(video_title_resolved(int)));
+    connect (mapper, SIGNAL(mapped(uint)), this, SLOT(video_title_resolved(uint)));
 
     youtube_dl->start(program, arguments);
 
@@ -530,8 +530,8 @@ void MainWindow::toggle_download_format()
     foreach(QModelIndex index, indexes)
     {
         item = ui->listVideoQueue->item(index.row());
-        uint current_item_key = item->data(Qt::UserRole).toUInt();
-        queue_items[current_item_key].toggleFormat();
+        uint item_key = item->data(Qt::UserRole).toUInt();
+        queue_items[item_key].toggleFormat();
         create_item_title_from_its_data(item);
     }
 }
