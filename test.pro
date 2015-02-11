@@ -21,14 +21,16 @@ SOURCES += main.cpp\
     dialognewdownload.cpp \
     settingswindow.cpp \
     queueitem.cpp \
-    settings.cpp
+    settings.cpp \
+    sharedmemory.cpp
 
 HEADERS  += mainwindow.h \
     ipc_client_server.h \
     dialognewdownload.h \
     settingswindow.h \
     queueitem.h \
-    settings.h
+    settings.h \
+    sharedmemory.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \
