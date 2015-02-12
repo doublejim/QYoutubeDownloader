@@ -10,10 +10,18 @@ bool SharedMemory::is_first_instance()
 {
     bool first = false;
 
-    if (main_program.listen(unique_identifier)) //This is first instance
+    notify_main_program.connectToServer(unique_identifier);
+    notify_main_program.waitForConnected();
+    notify_main_program.disconnectFromServer();
+
+    if(notify_main_program.error() == QLocalSocket::ServerNotFoundError)
     {
-        connect(&main_program, SIGNAL(newConnection()), this, SLOT(read_link_from_shared_memory()));
-        first = true; // This is first instance.
+        if (main_program.listen(unique_identifier)) //This is first instance
+        {
+            receiver.listen(unique_receiver_identifier);
+            connect(&receiver, SIGNAL(newConnection()), this, SLOT(read_link_from_shared_memory()));
+            first = true; // This is first instance.
+        }
     }
 
     return first;
@@ -37,12 +45,12 @@ void SharedMemory::share_link_with_first_instance(QString &data)
         shared_memory.unlock();
 
         // Listing for mainprogram to finish reading
-        if (wait_for_main_program.listen(unique_reply_identifier)) //This is first instance
+        if (wait_for_main_program.listen(unique_reply_identifier))
         {
             connect(&wait_for_main_program, SIGNAL(newConnection()), this, SLOT(link_has_been_read()));
 
             // Now link is shared and reply server is listening, notify server to read it
-            notify_main_program.connectToServer(unique_identifier);
+            notify_main_program.connectToServer(unique_receiver_identifier);
         }
         else
         {
@@ -64,7 +72,6 @@ void SharedMemory::read_link_from_shared_memory()
 {
     if (!shared_memory.attach())
     {
-        qDebug()<<"Unable to read link from shared memory! :-(";
         return;
     }
 
@@ -86,5 +93,6 @@ void SharedMemory::read_link_from_shared_memory()
 
 void SharedMemory::link_has_been_read()
 {
+    main_window_->do_not_save_settings = true;
     main_window_->close();
 }

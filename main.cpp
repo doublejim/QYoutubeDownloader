@@ -1,7 +1,6 @@
-#include "mainwindow.h"
 #include <QApplication>
-#include <ipc_client_server.h>
-#include <sharedmemory.h>
+#include "sharedmemory.h"
+#include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
@@ -29,3 +28,4 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+

@@ -24,11 +24,13 @@ private slots:
 private:
     // This is main_programs socket name, and the shared memory key
     const QString unique_identifier = "QYoutubeDownloader";
+    const QString unique_receiver_identifier = "QYoutubeDownloaderReceiveLink";
     // Used by the sharing program, to know when the main_progarm has finished reading the shared memory
     // so it can quit gracefully
     const QString unique_reply_identifier = "QYoutubeDownloaderReply";
 
     QLocalServer main_program;
+    QLocalServer receiver;
     QLocalServer wait_for_main_program;
 
     QLocalSocket notify_main_program;
