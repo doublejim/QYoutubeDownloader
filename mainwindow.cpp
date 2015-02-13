@@ -56,7 +56,9 @@ void MainWindow::apply_settings()
     else
         ui->textDetails->hide();
 
-    ui->editSearch->setText(settings->last_search());
+    if(ui->editSearch->text() == "") // Should only load on startup, not when applying settings
+        ui->editSearch->setText(settings->last_search());
+
     ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
 
     if (settings->always_hide_details())
@@ -118,22 +120,24 @@ void MainWindow::init_color_scheme()
     }
 }
 
-// Requires the path to a media player.
-// Right now, completely inflexible.
-// Should be configured via a settings menu instead.
-// But WORKS if you hard-code the path, etc.
-//
-// TODO: fix this method. Doesn't seem to work on linux.
-// looks okay though.
+// TODO: ensure path has a \ or / as last char. Also make possible to send arguments to player.
 void MainWindow::open_video()
 {
+    qDebug() << "open";
     QListWidgetItem *item = ui->listVideos->currentItem();
-    QString program = "/usr/bin/mpv";// f:/x64/Media Player Classic Home Cinema/mpc-hc64.exe"; // path to media player
+    QString program = settings->media_player_path();
     QFile check;
     check.setFileName(program);
     //if (check.exists()==false) return;
     QStringList arguments;
-    arguments << '\"' + ui->editDownloadPath->text() + item->text() + '\"';
+    QString dir = ui->editDownloadPath->text();
+
+    if (settings->media_player_args() != "")
+        arguments << settings->media_player_args() << dir + item->text();
+    else
+        arguments << dir + item->text();
+
+    qDebug() << program << arguments;
     QProcess* play_video = new QProcess();
     play_video->start(program, arguments);
     going_to_play_video = false; //(it already did at this point)
@@ -331,7 +335,7 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
     QListWidgetItem *item = ui->listVideoQueue->item( ui->listVideoQueue->currentRow() );
     uint current_item_key = item->data(Qt::UserRole).toUInt();
 
-    dialog1.load(queue_items[current_item_key].title , queue_items[current_item_key].format);
+    dialog1.load(queue_items[current_item_key].title, queue_items[current_item_key].format);
     // the solution to loading the settings should also be applied here!
 
     if (dialog1.exec())
@@ -397,19 +401,21 @@ void MainWindow::refresh_filelist() // stores a list of filenames from the downl
 
     QStringList filters;
     filters << "*.mp4";
+    filters << "*.m4a";
     ui->listVideos->clear();
     complete_filelist.clear();
 
     switch (ui->comboSortType->currentIndex())
     {
-    case 0:
-        foreach (QFileInfo file, dir.entryInfoList(filters,QDir::Files,QDir::Time | QDir::Reversed))
-            complete_filelist << file.fileName();
-        break;
-    case 1:
-        foreach (QFileInfo file, dir.entryInfoList(filters,QDir::Files,QDir::Name))
-            complete_filelist << file.fileName();
-        break;
+        case 0:
+            foreach (QFileInfo file, dir.entryInfoList(filters,QDir::Files,QDir::Time | QDir::Reversed))
+                complete_filelist << file.fileName();
+            break;
+
+        case 1:
+            foreach (QFileInfo file, dir.entryInfoList(filters,QDir::Files,QDir::Name))
+                complete_filelist << file.fileName();
+            break;
     }
 }
 

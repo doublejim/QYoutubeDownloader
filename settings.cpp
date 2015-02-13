@@ -28,6 +28,8 @@ void Settings::load()
     always_hide_details_ = settings_->value("Settings/AlwaysHideDetails").toBool();
     auto_download_ = settings_->value("Settings/AutoDownload").toBool();
     dark_style_ = settings_->value("Settings/DarkStyle").toBool();
+    media_player_path_ = settings_->value("Settings/MediaPlayer").toString();
+    media_player_args_ = settings_->value("Settings/MediaPlayerArgs").toString();
 }
 
 QSize Settings::size() const
@@ -118,4 +120,25 @@ void Settings::setDark_style(bool dark_style)
 {
     dark_style_ = dark_style;
     settings_->setValue("Settings/DarkStyle", dark_style);
+}
+
+QString Settings::media_player_path() const
+{
+    return media_player_path_;
+}
+void Settings::setMedia_player_path(const QString &media_player_path)
+{
+    media_player_path_ = media_player_path;
+    settings_->setValue("Settings/MediaPlayer", media_player_path);
+}
+
+QString Settings::media_player_args() const
+{
+    return media_player_args_;
+}
+
+void Settings::setMedia_player_args(const QString &media_player_args)
+{
+    media_player_args_ = media_player_args;
+    settings_->setValue("Settings/MediaPlayerArgs", media_player_args);
 }

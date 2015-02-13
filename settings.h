@@ -41,6 +41,12 @@ public:
     bool dark_style() const;
     void setDark_style(bool dark_style);
 
+    QString media_player_path() const;
+    void setMedia_player_path(const QString &media_player_path);
+
+    QString media_player_args() const;
+    void setMedia_player_args(const QString &media_player_args);
+
 private:
     QSettings *settings_;
     void load();
@@ -64,6 +70,8 @@ private:
     bool always_hide_details_ = false;
     bool auto_download_ = false;
     bool dark_style_ = false;
+    QString media_player_path_;
+    QString media_player_args_;
 };
 
 #endif // SETTINGS_H
