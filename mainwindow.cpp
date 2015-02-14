@@ -318,7 +318,8 @@ void MainWindow::download_top_video()
 
     ui->progressVideo->setValue(0);
     ui->progressAudio->setValue(0);
-    ui->progressVideo->show();
+    if(format == 0)
+        ui->progressVideo->show();
     ui->progressAudio->show();
     ui->labelVideo->show();
     ui->labelAudio->show();
