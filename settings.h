@@ -47,9 +47,13 @@ public:
     QString media_player_args() const;
     void setMedia_player_args(const QString &media_player_args);
 
+    QString output_template() const;
+    void setOutput_template(const QString &output_template);
+
 private:
     QSettings *settings_;
     void load();
+    void defaults();
 
     // Tip i just learned. If you put curser on a member vaiable (without getters and setters)
     // and presses alt+enter
@@ -72,6 +76,7 @@ private:
     bool dark_style_ = false;
     QString media_player_path_;
     QString media_player_args_;
+    QString output_template_;
 };
 
 #endif // SETTINGS_H

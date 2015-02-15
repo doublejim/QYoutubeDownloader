@@ -43,7 +43,16 @@ void MainWindow::restore_settings()
 {
     resize(settings->size());
     move(settings->position());
-    ui->editDownloadPath->setText(settings->download_path()); //);
+    ui->editDownloadPath->setText(settings->download_path());
+    ui->editSearch->setText(settings->last_search());
+    ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
+
+    if (settings->expand_details())
+        ui->textDetails->show();
+    else
+        ui->textDetails->hide();
+
+    // it doesn't yet load the download queue.
     apply_settings();
 }
 
@@ -51,16 +60,6 @@ void MainWindow::restore_settings()
 // This function is also called fra the settings window, whenever ok or apply is pressed
 void MainWindow::apply_settings()
 {
-    if (settings->expand_details())
-        ui->textDetails->show();
-    else
-        ui->textDetails->hide();
-
-    if(ui->editSearch->text() == "") // Should only load on startup, not when applying settings
-        ui->editSearch->setText(settings->last_search());
-
-    ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
-
     if (settings->always_hide_details())
     {
         ui->btnToggleDetails->hide();
@@ -72,7 +71,6 @@ void MainWindow::apply_settings()
     }
 
     init_color_scheme();
-    // it doesn't yet load the download queue.
 }
 
 void MainWindow::save_settings()
@@ -91,9 +89,6 @@ void MainWindow::save_settings()
     settings->setLast_search(ui->editSearch->text());
     settings->setCombo_sort_type(ui->comboSortType->currentIndex());
 
-//    settings.setValue("settings/AlwaysHideDetails", settingAlwaysHideDetails);
-//    settings.setValue("settings/AutoDownload", settingAutoDownload);
-//    settings.setValue("settings/DarkStyle", settingDarkStyle);
     // it doesn't yet save the download queue.
 }
 
@@ -310,7 +305,7 @@ void MainWindow::download_top_video()
         default: format_to_download = "bestvideo+bestaudio"; break;
     }
 
-    arguments << queue_items[current_item_key].url << "-o" << ui->editDownloadPath->text()+"%(uploader)s - %(title)s.%(ext)s" << "-f" << format_to_download;
+    arguments << queue_items[current_item_key].url << "-o" << ui->editDownloadPath->text() + settings->output_template() << "-f" << format_to_download;
 
     youtube_dl = new QProcess(this);
     connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));

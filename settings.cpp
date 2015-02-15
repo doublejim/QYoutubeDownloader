@@ -30,7 +30,16 @@ void Settings::load()
     dark_style_ = settings_->value("Settings/DarkStyle").toBool();
     media_player_path_ = settings_->value("Settings/MediaPlayer").toString();
     media_player_args_ = settings_->value("Settings/MediaPlayerArgs").toString();
+    output_template_ = settings_->value("Settings/OutputTemplate").toString();
+    defaults();
 }
+
+void Settings::defaults()
+{
+    if(output_template() == "")
+        setOutput_template("%(uploader)s - %(title)s.%(ext)s");
+}
+
 
 QSize Settings::size() const
 {
@@ -141,4 +150,14 @@ void Settings::setMedia_player_args(const QString &media_player_args)
 {
     media_player_args_ = media_player_args;
     settings_->setValue("Settings/MediaPlayerArgs", media_player_args);
+}
+
+QString Settings::output_template() const
+{
+    return output_template_;
+}
+void Settings::setOutput_template(const QString &output_template)
+{
+    output_template_ = output_template;
+    settings_->setValue("Settings/OutputTemplate", output_template);
 }
