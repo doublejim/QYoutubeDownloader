@@ -314,9 +314,11 @@ void MainWindow::download_top_video()
     ui->progressVideo->setValue(0);
     ui->progressAudio->setValue(0);
     if(format == 0)
+    {
         ui->progressVideo->show();
+        ui->labelVideo->show();
+    }
     ui->progressAudio->show();
-    ui->labelVideo->show();
     ui->labelAudio->show();
     ui->btnStartDownload->setText("Pause");
     ++download_progress;
@@ -349,6 +351,17 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
 
 void MainWindow::delete_selected_item_on_queue()
 {
+    if(ui->listVideoQueue->currentItem() == ui->listVideoQueue->item(0))
+    {
+        youtube_dl->close();
+        download_progress=0;
+        ui->btnStartDownload->setText("Start downloading");
+        ui->progressVideo->hide();
+        ui->progressAudio->hide();
+        ui->labelVideo->hide();
+        ui->labelAudio->hide();
+    }
+
     delete ui->listVideoQueue->currentItem();
 }
 
