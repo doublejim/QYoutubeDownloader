@@ -8,8 +8,15 @@ QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = test
+TARGET = QYoutubeDownloader
 TEMPLATE = app
+
+DESTDIR = $$_PRO_FILE_PWD_/build
+DLLDESTDIR = $$_PRO_FILE_PWD_/build
+OBJECTS_DIR = $$_PRO_FILE_PWD_/build/.tmp
+MOC_DIR = $$_PRO_FILE_PWD_/build/.tmp
+RCC_DIR = $$_PRO_FILE_PWD_/build/.rcc
+UI_DIR = $$_PRO_FILE_PWD_/build/.ui
 
 CONFIG += c++11
 
@@ -17,7 +24,6 @@ RESOURCES += style.qrc
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    ipc_client_server.cpp \
     dialognewdownload.cpp \
     settingswindow.cpp \
     queueitem.cpp \
@@ -25,7 +31,6 @@ SOURCES += main.cpp\
     sharedmemory.cpp
 
 HEADERS  += mainwindow.h \
-    ipc_client_server.h \
     dialognewdownload.h \
     settingswindow.h \
     queueitem.h \
