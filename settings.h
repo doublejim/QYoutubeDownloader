@@ -50,6 +50,9 @@ public:
     QString output_template() const;
     void setOutput_template(const QString &output_template);
 
+    bool open_in_player_after_download() const;
+    void setOpen_in_player_after_download(bool value);
+
 private:
     QSettings *settings_;
     void load();
@@ -69,6 +72,7 @@ private:
     QString last_search_;
     bool expand_details_ = true; //rename to expand, because it is not the oposite of "always hide details"
     int combo_sort_type_;
+    bool open_in_player_after_download_ = false;
 
     // Settings window
     bool always_hide_details_ = false;

@@ -46,6 +46,7 @@ void MainWindow::restore_settings()
     ui->editDownloadPath->setText(settings->download_path());
     ui->editSearch->setText(settings->last_search());
     ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
+    ui->checkOpenInPlayerAfterDownload->setChecked(settings->open_in_player_after_download());
 
     if (settings->expand_details())
         ui->textDetails->show();
@@ -79,6 +80,7 @@ void MainWindow::save_settings()
     settings->setSize(size());
     settings->setPosition(pos());
 
+    settings->setOpen_in_player_after_download(ui->checkOpenInPlayerAfterDownload->isChecked());
     QDir dir (ui->editDownloadPath->text());
 
     if (dir.exists())
@@ -118,24 +120,28 @@ void MainWindow::init_color_scheme()
 // TODO: ensure path has a \ or / as last char. Also make possible to send arguments to player.
 void MainWindow::open_video()
 {
-    qDebug() << "open";
     QListWidgetItem *item = ui->listVideos->currentItem();
-    QString program = settings->media_player_path();
-    QFile check;
-    check.setFileName(program);
-    //if (check.exists()==false) return;
-    QStringList arguments;
     QString dir = ui->editDownloadPath->text();
 
-    if (settings->media_player_args() != "")
-        arguments << settings->media_player_args() << dir + item->text();
-    else
-        arguments << dir + item->text();
+    QString url = dir + item->text(); //todo ensure dir ends with / or \ dending on OS
 
-    qDebug() << program << arguments;
+    play_video(url);
+
+    going_to_play_video = false; //(it already did at this point)
+}
+
+void MainWindow::play_video(QString url)
+{
+    QString program = settings->media_player_path();
+    QStringList arguments;
+
+    if (settings->media_player_args() != "")
+        arguments << settings->media_player_args() << url;
+    else
+        arguments << url;
+
     QProcess* play_video = new QProcess();
     play_video->start(program, arguments);
-    going_to_play_video = false; //(it already did at this point)
 }
 
 void MainWindow::select_directory()
@@ -176,7 +182,11 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                     if (queue_items[current_item_key].format==0)  // Download Audio + video
                         download_progress = 2;
                     else // Download Audio
+                    {
                         download_progress = 4;
+                        last_audio_destination = newOutput.right(newOutput.length() - i - 13); // Not so nice, but works
+                        last_audio_destination = last_audio_destination.simplified(); // remove trailing newline
+                    }
                 }
                 break;
                 }
@@ -213,6 +223,7 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 break;
                 }
     }
+    last_youtubedl_output = newOutput;
 }
 
 void MainWindow::check_download_path()
@@ -445,6 +456,23 @@ void MainWindow::refresh_filelist_filtering() // filters the videos (without sea
 void MainWindow::downloading_ended(int a) // delete top video, download next top video. a is not used, but required by the signal.
 {
     if (download_progress!=5) return;
+    if(ui->checkOpenInPlayerAfterDownload->isChecked())
+    {
+        uint item_key = ui->listVideoQueue->item(0)->data(Qt::UserRole).toUInt();
+        if (queue_items[item_key].format == 0 )
+        {
+            qDebug() << last_youtubedl_output;
+            QRegExp rx("\"([^\"]*)\""); // Match string in quotes
+            rx.indexIn(last_youtubedl_output); // Search in last_output
+            if(rx.cap(1) != "") // If file found, play it
+                play_video(rx.cap(1));
+        }
+        else
+        {
+            if(last_audio_destination != "")
+                play_video(last_audio_destination);
+        }
+    }
     download_progress=0;
     refresh_filelist();
     refresh_filelist_filtering();
@@ -456,6 +484,7 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
     ui->labelVideo->hide();
     ui->labelAudio->hide();
     ui->btnStartDownload->setText("Start downloading");
+
 }
 
 void MainWindow::on_btnStartDownload_clicked() // start downloading

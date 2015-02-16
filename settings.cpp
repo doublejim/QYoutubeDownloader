@@ -24,6 +24,7 @@ void Settings::load()
     expand_details_ = settings_->value("Main/ExpandDetails").toBool();
     last_search_ = settings_->value("Main/LastSearch").toString();
     combo_sort_type_ = settings_->value("Main/comboSortType").toInt();
+    open_in_player_after_download_ = settings_->value("Main/OpenInPlayerAfterDownload").toBool();
 
     always_hide_details_ = settings_->value("Settings/AlwaysHideDetails").toBool();
     auto_download_ = settings_->value("Settings/AutoDownload").toBool();
@@ -99,6 +100,16 @@ void Settings::setCombo_sort_type(int combo_sort_type)
 {
     combo_sort_type_ = combo_sort_type;
     settings_->setValue("Main/comboSortType", combo_sort_type);
+}
+
+bool Settings::open_in_player_after_download() const
+{
+    return open_in_player_after_download_;
+}
+void Settings::setOpen_in_player_after_download(bool value)
+{
+    open_in_player_after_download_ = value;
+    settings_->setValue("Main/OpenInPlayerAfterDownload", value);
 }
 
 bool Settings::always_hide_details() const

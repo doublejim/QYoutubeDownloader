@@ -70,6 +70,7 @@ private:
     void save_settings();
     void restore_settings();
     void start_resolving_video_title(uint item_key, QString url);
+    void play_video(QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl;
@@ -77,6 +78,8 @@ private:
     QStringList complete_filelist;
     unsigned int unique_item_key = 0;
     bool going_to_play_video = false;
+    QString last_youtubedl_output;
+    QString last_audio_destination;
 };
 
 #endif // MAINWINDOW_H
