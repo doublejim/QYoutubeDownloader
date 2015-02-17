@@ -47,7 +47,6 @@ public slots:
     void apply_resolved_video_title(uint item_key, QString title);
 
 private slots:
-    //void video_title_resolved(int item_key);
     void check_download_path();
     void fix_download_path();
     void stop_downloading();
@@ -60,9 +59,6 @@ private slots:
     void download_top_video();
     void downloading_ended(int a);
     void create_item_title_from_its_data(QListWidgetItem* item);
-    //void resolve_this_video_title(uint item_key, QStringList arguments);
-    //void add_video_to_resolve_queue(QListWidgetItem* item);
-
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
     void on_btnToggleDetails_clicked();
@@ -83,21 +79,19 @@ private:
     void init_color_scheme();
     void save_settings();
     void restore_settings();
+    void play_video(QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl;
     VideoTitleResolving* resolver;
-    //QProcess* youtube_dl_title_resolving;
-    //QThread threadTitleResolving;
-    //QVector <pair<uint,QStringList> > title_resolving_queue;
     QMutex mutex__io_on_item_list;
-    //QMutex* mutex__title_resolving_in_progress;
-    //TitleResolvingSignal title_resolving_signal;
 
     ushort download_progress = 0;
     QStringList complete_filelist;
     unsigned int unique_item_key = 0;
     bool going_to_play_video = false;
+    QString last_youtubedl_output;
+    QString last_audio_destination;
 };
 
 #endif // MAINWINDOW_H

@@ -28,6 +28,7 @@ void SettingsWindow::load_settings()
     ui->checkDarkStyle->setChecked(settings->dark_style());
     ui->editMediaPlayerPath->setText(settings->media_player_path());
     ui->editMediaPlayerArgs->setText(settings->media_player_args());
+    ui->editOutputTemplate->setText(settings->output_template());
 }
 
 void SettingsWindow::save()
@@ -37,6 +38,7 @@ void SettingsWindow::save()
     settings->setDark_style(ui->checkDarkStyle->isChecked());
     settings->setMedia_player_path(ui->editMediaPlayerPath->text());
     settings->setMedia_player_args(ui->editMediaPlayerArgs->text());
+    settings->setOutput_template(ui->editOutputTemplate->text());
 
     main_window_->apply_settings();
 }
