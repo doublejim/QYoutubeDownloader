@@ -25,6 +25,16 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
 
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
+
+    // NAME RESOLVING ALLOWED
+    //connect(&NameResolvingThread, SIGNAL(finished()), &NameResolvingThread, SLOT(deleteLater()));
+    resolver = new VideoTitleResolving;
+    resolver->moveToThread(&NameResolvingThread);
+    NameResolvingThread.setObjectName("QYoutubeDownloader Title Resolver");
+    connect(this, SIGNAL(begin_name_resolving(uint,QString)), resolver, SLOT(begin_resolve(uint,QString)));
+    connect(resolver, SIGNAL(name_resolved(uint, QString)), this, SLOT(apply_resolved_video_title(uint, QString)));
+    NameResolvingThread.start();
+    // // // // // // // //
 }
 
 MainWindow::~MainWindow()
@@ -36,7 +46,6 @@ MainWindow::~MainWindow()
     }
     delete ui;
 }
-
 
 //Settings that should be applied on program start
 void MainWindow::restore_settings()
@@ -252,38 +261,20 @@ void MainWindow::fix_download_path()
         ui->editDownloadPath->setText(dir+'/');
 }
 
-
-void MainWindow::video_title_resolved(int item_key)
+void MainWindow::apply_resolved_video_title(uint item_key, QString title)
 {
-    QString new_title = youtube_dl->readAllStandardOutput().simplified();
+    QMutexLocker locker(&mutex__io_on_item_list);
+
     for (int i=0; i<ui->listVideoQueue->count(); ++i)
     {
         QListWidgetItem *list_item = ui->listVideoQueue->item(i);
         if (list_item->data(Qt::UserRole).toUInt()==item_key)
         {
-            queue_items[item_key].title=new_title;
+            queue_items[item_key].title=title;
             create_item_title_from_its_data(list_item);
             return;
         }
     }
-}
-
-void MainWindow::start_resolving_video_title(uint item_key, QString url)
-{
-    QString program = "youtube-dl";
-    QStringList arguments;
-    arguments << "-e" << url;
-
-    youtube_dl = new QProcess(this);
-    QSignalMapper *mapper = new QSignalMapper(this);
-
-    connect (youtube_dl, SIGNAL(readyReadStandardOutput()), mapper, SLOT(map()));
-    mapper->setMapping(youtube_dl, item_key);
-    connect (mapper, SIGNAL(mapped(int)), this, SLOT(video_title_resolved(int)));
-
-    youtube_dl->start(program, arguments);
-
-    return;
 }
 
 void MainWindow::download_top_video()
@@ -354,6 +345,7 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
 
 void MainWindow::delete_selected_item_on_queue()
 {
+    QMutexLocker locker(&mutex__io_on_item_list);
     delete ui->listVideoQueue->currentItem();
 }
 
@@ -377,6 +369,8 @@ void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
 
 void MainWindow::add_video_to_download_list(QString url, uint format)
 {
+    QMutexLocker locker(&mutex__io_on_item_list);
+
     QListWidgetItem *item = new QListWidgetItem(url);
 
     item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
@@ -388,7 +382,7 @@ void MainWindow::add_video_to_download_list(QString url, uint format)
     create_item_title_from_its_data(item);
     ui->listVideoQueue->addItem(item);
 
-    start_resolving_video_title(unique_item_key, url);
+    emit begin_name_resolving(unique_item_key,url); // Begin name resolving!
 
     ++unique_item_key;
 
@@ -436,6 +430,8 @@ void MainWindow::refresh_filelist_filtering() // filters the videos (without sea
 
 void MainWindow::downloading_ended(int a) // delete top video, download next top video. a is not used, but required by the signal.
 {
+    QMutexLocker locker(&mutex__io_on_item_list);
+
     if (download_progress!=5) return;
     download_progress=0;
     refresh_filelist();

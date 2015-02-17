@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     settingswindow.cpp \
     queueitem.cpp \
     settings.cpp \
-    sharedmemory.cpp
+    sharedmemory.cpp \
+    video_title_resolving.cpp
 
 HEADERS  += mainwindow.h \
     ipc_client_server.h \
@@ -30,7 +31,8 @@ HEADERS  += mainwindow.h \
     settingswindow.h \
     queueitem.h \
     settings.h \
-    sharedmemory.h
+    sharedmemory.h \
+    video_title_resolving.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \

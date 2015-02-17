@@ -12,11 +12,16 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QSignalMapper>
+#include <QMutex>
+#include <QThread>
 
 #include "settingswindow.h"
 #include "settings.h"
 #include "queueitem.h"
 #include "dialognewdownload.h"
+#include "video_title_resolving.h"
+
+using namespace std;
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +30,7 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    QThread NameResolvingThread;
 
 public:
     explicit MainWindow(QApplication *qapp, QWidget *parent = 0);
@@ -34,7 +40,14 @@ public:
     void apply_settings();
     bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
 
+signals:
+    void begin_name_resolving(uint item_key, QString url);
+
+public slots:
+    void apply_resolved_video_title(uint item_key, QString title);
+
 private slots:
+    //void video_title_resolved(int item_key);
     void check_download_path();
     void fix_download_path();
     void stop_downloading();
@@ -47,7 +60,8 @@ private slots:
     void download_top_video();
     void downloading_ended(int a);
     void create_item_title_from_its_data(QListWidgetItem* item);
-    void video_title_resolved(int item_key);
+    //void resolve_this_video_title(uint item_key, QStringList arguments);
+    //void add_video_to_resolve_queue(QListWidgetItem* item);
 
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
@@ -69,10 +83,17 @@ private:
     void init_color_scheme();
     void save_settings();
     void restore_settings();
-    void start_resolving_video_title(uint item_key, QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl;
+    VideoTitleResolving* resolver;
+    //QProcess* youtube_dl_title_resolving;
+    //QThread threadTitleResolving;
+    //QVector <pair<uint,QStringList> > title_resolving_queue;
+    QMutex mutex__io_on_item_list;
+    //QMutex* mutex__title_resolving_in_progress;
+    //TitleResolvingSignal title_resolving_signal;
+
     ushort download_progress = 0;
     QStringList complete_filelist;
     unsigned int unique_item_key = 0;
