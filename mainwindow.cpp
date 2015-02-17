@@ -23,6 +23,9 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->listVideoQueue);
     connect(shortcut, SIGNAL(activated()), this, SLOT(delete_selected_item_on_queue()));
 
+    QShortcut* enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->listVideos);
+    connect(enter, SIGNAL(activated()), this, SLOT(on_listVideos_doubleClicked()));
+
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
 }
@@ -257,7 +260,6 @@ void MainWindow::fix_download_path()
         dir[dir.length()-1]!='\\' )
         ui->editDownloadPath->setText(dir+'/');
 }
-
 
 void MainWindow::video_title_resolved(int item_key)
 {

@@ -48,7 +48,6 @@ private slots:
     void downloading_ended(int a);
     void create_item_title_from_its_data(QListWidgetItem* item);
     void video_title_resolved(int item_key);
-
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
     void on_btnToggleDetails_clicked();
