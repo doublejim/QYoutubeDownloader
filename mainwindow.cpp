@@ -362,7 +362,7 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
 
 void MainWindow::delete_selected_item_on_queue()
 {
-    if(ui->listVideoQueue->currentItem() == ui->listVideoQueue->item(0))
+    if(ui->listVideoQueue->selectedItems().contains(ui->listVideoQueue->item(0)))
     {
         youtube_dl->close();
         download_progress=0;
@@ -373,7 +373,8 @@ void MainWindow::delete_selected_item_on_queue()
         ui->labelAudio->hide();
     }
 
-    delete ui->listVideoQueue->currentItem();
+    foreach(QListWidgetItem *item, ui->listVideoQueue->selectedItems())
+        delete item;
 }
 
 void MainWindow::stop_downloading()
@@ -422,6 +423,9 @@ void MainWindow::refresh_filelist() // stores a list of filenames from the downl
     QStringList filters;
     filters << "*.mp4";
     filters << "*.m4a";
+    filters << "*.mp3";
+    filters << "*.ogg";
+    filters << "*.flv";
     ui->listVideos->clear();
     complete_filelist.clear();
 
