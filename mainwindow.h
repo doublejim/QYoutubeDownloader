@@ -11,15 +11,12 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QShortcut>
-#include <QSignalMapper>
-#include <QMutex>
-#include <QThread>
+#include <QtConcurrent/QtConcurrentRun>
 
 #include "settingswindow.h"
 #include "settings.h"
 #include "queueitem.h"
 #include "dialognewdownload.h"
-#include "video_title_resolving.h"
 
 using namespace std;
 
@@ -39,12 +36,6 @@ public:
     Settings *settings;
     void apply_settings();
     bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
-
-signals:
-    void begin_name_resolving(uint item_key, QString url);
-
-public slots:
-    void apply_resolved_video_title(uint item_key, QString title);
 
 private slots:
     void check_download_path();
@@ -80,11 +71,10 @@ private:
     void save_settings();
     void restore_settings();
     void play_video(QString url);
+    void resolve_title(uint item_key, QString& url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
-    QProcess* youtube_dl;
-    VideoTitleResolving* resolver;
-    QMutex mutex__io_on_item_list;
+    QProcess* youtube_dl = NULL;
 
     ushort download_progress = 0;
     QStringList complete_filelist;

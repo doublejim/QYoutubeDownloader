@@ -28,16 +28,6 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
 
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
-
-    // NAME RESOLVING ALLOWED
-    //connect(&NameResolvingThread, SIGNAL(finished()), &NameResolvingThread, SLOT(deleteLater()));
-    resolver = new VideoTitleResolving;
-    resolver->moveToThread(&NameResolvingThread);
-    NameResolvingThread.setObjectName("QYoutubeDownloader Title Resolver");
-    connect(this, SIGNAL(begin_name_resolving(uint,QString)), resolver, SLOT(begin_resolve(uint,QString)));
-    connect(resolver, SIGNAL(name_resolved(uint, QString)), this, SLOT(apply_resolved_video_title(uint, QString)));
-    NameResolvingThread.start();
-    // // // // // // // //
 }
 
 MainWindow::~MainWindow()
@@ -53,8 +43,10 @@ MainWindow::~MainWindow()
 //Settings that should be applied on program start
 void MainWindow::restore_settings()
 {
-    resize(settings->size());
-    move(settings->position());
+    if(settings->size() != QSize()) // size not set, let wm chose
+        resize(settings->size());
+    if(settings->position() != QPoint()) // pos not set, let wm chose
+        move(settings->position());
     ui->editDownloadPath->setText(settings->download_path());
     ui->editSearch->setText(settings->last_search());
     ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
@@ -89,8 +81,12 @@ void MainWindow::apply_settings()
 void MainWindow::save_settings()
 {
     qDebug() << __func__;
-    settings->setSize(size());
-    settings->setPosition(pos());
+
+    if(!settings->do_not_save_size_and_position())
+    {
+        settings->setSize(size());
+        settings->setPosition(pos());
+    }
 
     settings->setOpen_in_player_after_download(ui->checkOpenInPlayerAfterDownload->isChecked());
     QDir dir (ui->editDownloadPath->text());
@@ -270,22 +266,6 @@ void MainWindow::fix_download_path()
         ui->editDownloadPath->setText(dir+'/');
 }
 
-void MainWindow::apply_resolved_video_title(uint item_key, QString title)
-{
-    QMutexLocker locker(&mutex__io_on_item_list);
-
-    for (int i=0; i<ui->listVideoQueue->count(); ++i)
-    {
-        QListWidgetItem *list_item = ui->listVideoQueue->item(i);
-        if (list_item->data(Qt::UserRole).toUInt()==item_key)
-        {
-            queue_items[item_key].title=title;
-            create_item_title_from_its_data(list_item);
-            return;
-        }
-    }
-}
-
 void MainWindow::download_top_video()
 {
     if (ui->listVideoQueue->count()==0) return; // quits if the list is empty
@@ -356,11 +336,10 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
 
 void MainWindow::delete_selected_item_on_queue()
 {
-    QMutexLocker locker(&mutex__io_on_item_list);
-
     if(ui->listVideoQueue->selectedItems().contains(ui->listVideoQueue->item(0)))
     {
-        youtube_dl->close();
+        if(youtube_dl != NULL)
+            youtube_dl->close();
         download_progress=0;
         ui->btnStartDownload->setText("Start downloading");
         ui->progressVideo->hide();
@@ -391,10 +370,44 @@ void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
     }
 }
 
+void MainWindow::resolve_title(uint item_key, QString& url)
+{
+    try
+    {
+        QString program = "youtube-dl";
+
+        QStringList arguments;
+        arguments << "-e" << url;
+
+        QProcess youtube_dl;
+
+        youtube_dl.start(program, arguments);
+        youtube_dl.waitForReadyRead();
+        QString title = youtube_dl.readAllStandardOutput().simplified();
+
+        youtube_dl.close();
+
+        if (title == "")
+            return;
+
+        QListWidgetItem *item;
+        for(int i = 0; i < ui->listVideoQueue->count(); i++)
+        {
+            item = ui->listVideoQueue->item(i);
+            if (item->data(Qt::UserRole).toUInt() == item_key)
+            {
+                queue_items[item_key].title = title;
+                create_item_title_from_its_data(item);
+                return;
+            }
+        }
+    }
+    catch(int e)
+    {}
+}
+
 void MainWindow::add_video_to_download_list(QString url, uint format)
 {
-    QMutexLocker locker(&mutex__io_on_item_list);
-
     QListWidgetItem *item = new QListWidgetItem(url);
 
     item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
@@ -406,7 +419,8 @@ void MainWindow::add_video_to_download_list(QString url, uint format)
     create_item_title_from_its_data(item);
     ui->listVideoQueue->addItem(item);
 
-    emit begin_name_resolving(unique_item_key,url); // Begin name resolving!
+//    emit begin_name_resolving(unique_item_key,url); // Begin name resolving!
+    QtConcurrent::run(this, &MainWindow::resolve_title, unique_item_key, url);
 
     ++unique_item_key;
 
@@ -457,8 +471,6 @@ void MainWindow::refresh_filelist_filtering() // filters the videos (without sea
 
 void MainWindow::downloading_ended(int a) // delete top video, download next top video. a is not used, but required by the signal.
 {
-    QMutexLocker locker(&mutex__io_on_item_list);
-
     if (download_progress!=5) return;
     if(ui->checkOpenInPlayerAfterDownload->isChecked())
     {

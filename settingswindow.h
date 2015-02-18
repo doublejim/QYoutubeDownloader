@@ -25,6 +25,8 @@ private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
     void on_buttonBox_accepted();
     void on_btnBrowseMediaPlayer_clicked();
+    void on_btnSaveSizeAndPosition_clicked();
+    void on_btnResetSizeAndPosition_clicked();
     void load_settings();
     void save();
 

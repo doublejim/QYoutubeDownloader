@@ -28,16 +28,14 @@ SOURCES += main.cpp\
     settingswindow.cpp \
     queueitem.cpp \
     settings.cpp \
-    sharedmemory.cpp \
-    video_title_resolving.cpp
+    sharedmemory.cpp
 
 HEADERS  += mainwindow.h \
     dialognewdownload.h \
     settingswindow.h \
     queueitem.h \
     settings.h \
-    sharedmemory.h \
-    video_title_resolving.h
+    sharedmemory.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \

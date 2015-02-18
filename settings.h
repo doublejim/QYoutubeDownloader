@@ -53,6 +53,9 @@ public:
     bool open_in_player_after_download() const;
     void setOpen_in_player_after_download(bool value);
 
+    bool do_not_save_size_and_position() const;
+    void setDo_not_save_size_and_position(bool do_not_save_size_and_position);
+
 private:
     QSettings *settings_;
     void load();
@@ -78,6 +81,7 @@ private:
     bool always_hide_details_ = false;
     bool auto_download_ = false;
     bool dark_style_ = false;
+    bool do_not_save_size_and_position_ = false;
     QString media_player_path_;
     QString media_player_args_;
     QString output_template_;

@@ -26,6 +26,7 @@ void SettingsWindow::load_settings()
     ui->checkAlwaysHideDetails->setChecked(settings->always_hide_details());
     ui->checkAutoDownload->setChecked(settings->auto_download());
     ui->checkDarkStyle->setChecked(settings->dark_style());
+    ui->checkDoNotSaveSizeAndPosition->setChecked(settings->do_not_save_size_and_position());
     ui->editMediaPlayerPath->setText(settings->media_player_path());
     ui->editMediaPlayerArgs->setText(settings->media_player_args());
     ui->editOutputTemplate->setText(settings->output_template());
@@ -36,6 +37,7 @@ void SettingsWindow::save()
     settings->setAlways_hide_details(ui->checkAlwaysHideDetails->isChecked());
     settings->setAuto_download(ui->checkAutoDownload->isChecked());
     settings->setDark_style(ui->checkDarkStyle->isChecked());
+    settings->setDo_not_save_size_and_position(ui->checkDoNotSaveSizeAndPosition->isChecked());
     settings->setMedia_player_path(ui->editMediaPlayerPath->text());
     settings->setMedia_player_args(ui->editMediaPlayerArgs->text());
     settings->setOutput_template(ui->editOutputTemplate->text());
@@ -69,3 +71,16 @@ void SettingsWindow::on_btnBrowseMediaPlayer_clicked()
         ui->editMediaPlayerPath->setText(dialog.selectedFiles().at(0));
     }
 }
+
+void SettingsWindow::on_btnSaveSizeAndPosition_clicked()
+{
+    settings->setSize(main_window_->size());
+    settings->setPosition(main_window_->pos());
+}
+
+void SettingsWindow::on_btnResetSizeAndPosition_clicked()
+{
+    settings->setSize(QSize());
+    settings->setPosition(QPoint());
+}
+

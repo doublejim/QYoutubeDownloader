@@ -29,6 +29,7 @@ void Settings::load()
     always_hide_details_ = settings_->value("Settings/AlwaysHideDetails").toBool();
     auto_download_ = settings_->value("Settings/AutoDownload").toBool();
     dark_style_ = settings_->value("Settings/DarkStyle").toBool();
+    do_not_save_size_and_position_ = settings_->value("Settings/DoNotSaveSizeAndPosition").toBool();
     media_player_path_ = settings_->value("Settings/MediaPlayer").toString();
     media_player_args_ = settings_->value("Settings/MediaPlayerArgs").toString();
     output_template_ = settings_->value("Settings/OutputTemplate").toString();
@@ -140,6 +141,16 @@ void Settings::setDark_style(bool dark_style)
 {
     dark_style_ = dark_style;
     settings_->setValue("Settings/DarkStyle", dark_style);
+}
+
+bool Settings::do_not_save_size_and_position() const
+{
+    return do_not_save_size_and_position_;
+}
+void Settings::setDo_not_save_size_and_position(bool do_not_save_size_and_position)
+{
+    do_not_save_size_and_position_ = do_not_save_size_and_position;
+    settings_->setValue("Settings/DoNotSaveSizeAndPosition", do_not_save_size_and_position);
 }
 
 QString Settings::media_player_path() const
