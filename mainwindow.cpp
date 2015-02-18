@@ -349,7 +349,11 @@ void MainWindow::delete_selected_item_on_queue()
     }
 
     foreach(QListWidgetItem *item, ui->listVideoQueue->selectedItems())
+    {
+        uint item_key = item->data(Qt::UserRole).toUInt();
         delete item;
+        queue_items.remove(item_key);
+    }
 }
 
 void MainWindow::stop_downloading()
@@ -370,7 +374,7 @@ void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
     }
 }
 
-void MainWindow::resolve_title(uint item_key, QString& url)
+void MainWindow::resolve_title(uint item_key, QString url)
 {
     try
     {
@@ -398,6 +402,7 @@ void MainWindow::resolve_title(uint item_key, QString& url)
             {
                 queue_items[item_key].title = title;
                 create_item_title_from_its_data(item);
+                ui->listVideoQueue->update();
                 return;
             }
         }
@@ -493,14 +498,15 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
     refresh_filelist();
     refresh_filelist_filtering();
     QListWidgetItem *item = ui->listVideoQueue->item(0);
+    uint item_key = item->data(Qt::UserRole).toUInt();
     delete item;
+    queue_items.remove(item_key);
     if (ui->listVideoQueue->count()>0) { download_top_video(); return; }
     ui->progressVideo->hide(); // will only hide progressbars if there are no more videos to download.
     ui->progressAudio->hide();
     ui->labelVideo->hide();
     ui->labelAudio->hide();
     ui->btnStartDownload->setText("Start downloading");
-
 }
 
 void MainWindow::on_btnStartDownload_clicked() // start downloading

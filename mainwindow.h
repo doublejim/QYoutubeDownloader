@@ -71,7 +71,7 @@ private:
     void save_settings();
     void restore_settings();
     void play_video(QString url);
-    void resolve_title(uint item_key, QString& url);
+    void resolve_title(uint item_key, QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl = NULL;
