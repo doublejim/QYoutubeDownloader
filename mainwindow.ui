@@ -34,6 +34,32 @@
          </widget>
         </item>
         <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Default download format</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QRadioButton" name="radioAudioVideo">
+             <property name="text">
+              <string>Audio + video</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioAudioOnly">
+             <property name="text">
+              <string>Audio only</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="checkOpenInPlayerAfterDownload">
           <property name="text">
            <string>Open in player when finished downloading</string>

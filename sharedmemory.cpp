@@ -87,7 +87,7 @@ void SharedMemory::read_link_from_shared_memory()
 
     shared_memory.detach();
 
-    main_window_->add_video_to_download_list(url);
+    main_window_->add_video_to_download_list(url, main_window_->default_format());
     notify_sharing_program.connectToServer(unique_reply_identifier);
 }
 
