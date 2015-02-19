@@ -28,6 +28,7 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
 
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
+    qRegisterMetaType<QVector<int> >("QVector<int>");
 }
 
 MainWindow::~MainWindow()
@@ -78,6 +79,14 @@ void MainWindow::apply_settings()
     init_color_scheme();
 }
 
+uint MainWindow::default_format()
+{
+    if(ui->radioAudioVideo->isChecked())
+        return 0;
+    else
+        return 1;
+}
+
 void MainWindow::save_settings()
 {
     qDebug() << __func__;
@@ -94,7 +103,7 @@ void MainWindow::save_settings()
     if (dir.exists())
         settings->setDownload_path(dir.path());
 
-    settings->setExpand_details(ui->textDetails->isHidden());
+    settings->setExpand_details(!ui->textDetails->isHidden());
 
     settings->setLast_search(ui->editSearch->text());
     settings->setCombo_sort_type(ui->comboSortType->currentIndex());
@@ -564,7 +573,7 @@ void MainWindow::on_editSearch_textChanged() // search text changed
     if (ui->editSearch->text().length()==0) check_download_path();
 }
 
-void MainWindow::on_comboSortType_currentIndexChanged() // new type of sorting
+void MainWindow::on_comboSortType_currentIndexChanged(int a) // new type of sorting
 {
     refresh_filelist();
     refresh_filelist_filtering();

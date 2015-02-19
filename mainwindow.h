@@ -36,6 +36,7 @@ public:
     Settings *settings;
     void apply_settings();
     bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
+    uint default_format();
 
 private slots:
     void check_download_path();
@@ -57,7 +58,7 @@ private slots:
     void on_editDownloadPath_textChanged();
     void on_listVideos_doubleClicked();
     void on_editSearch_textChanged();
-    void on_comboSortType_currentIndexChanged();
+    void on_comboSortType_currentIndexChanged(int a);
     void on_actionSettings_Menu_triggered();
     void customContextMenuRequested(QPoint);
     void toggle_download_format();
