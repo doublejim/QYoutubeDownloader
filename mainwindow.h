@@ -12,6 +12,8 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QtConcurrent/QtConcurrentRun>
+#include <QClipboard>
+#include <QMimeData>
 
 #include "settingswindow.h"
 #include "settings.h"
@@ -64,8 +66,8 @@ private slots:
     void on_listVideoQueue_doubleClicked();
     void on_btnShowStatus_clicked();
     void on_btnShowOptions_clicked();
-
     void on_checkAutoDownload_clicked();
+    void listVideoQueue_paste();
 
 private:
     Ui::MainWindow *ui;

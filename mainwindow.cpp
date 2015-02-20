@@ -26,6 +26,9 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     QShortcut* enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->listVideos);
     connect(enter, SIGNAL(activated()), this, SLOT(on_listVideos_doubleClicked()));
 
+    QShortcut* shortcut_ctrl_v = new QShortcut(QKeySequence(tr("Ctrl+V")), ui->listVideoQueue);
+    connect(shortcut_ctrl_v, SIGNAL(activated()),this,SLOT(listVideoQueue_paste()));
+
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
     qRegisterMetaType<QVector<int> >("QVector<int>");
@@ -135,6 +138,20 @@ void MainWindow::init_color_scheme()
     else
     {
         qapp_->setStyleSheet("fusion");
+    }
+}
+
+void MainWindow::listVideoQueue_paste()
+{
+    const QClipboard *clipboard = QApplication::clipboard();
+    const QMimeData *mimeData = clipboard->mimeData();
+
+    QString text;
+
+    if (mimeData->hasText())
+    {
+        text = mimeData->text();
+        add_video_to_download_list(text);
     }
 }
 
