@@ -56,12 +56,12 @@ void MainWindow::restore_settings()
     ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
     ui->checkOpenInPlayerAfterDownload->setChecked(settings->open_in_player_after_download());
     ui->checkAutoDownload->setChecked(settings->auto_download());
-    ui->stackedWidget->setCurrentIndex(settings->stacked_widget_active_page());
+    ui->stackedQueueInfoOptions->setCurrentIndex(settings->stacked_widget_active_page());
 
-    if (settings->expand_details())
-        ui->stackedWidget->show();
+    if (settings->expand_status_and_settings())
+        ui->stackedQueueInfoOptions->show();
     else
-        ui->stackedWidget->hide();
+        ui->stackedQueueInfoOptions->hide();
 
     // it doesn't yet load the download queue.
     apply_settings();
@@ -74,8 +74,8 @@ void MainWindow::apply_settings()
     if (settings->hide_status_button())
     {
         ui->btnShowStatus->hide();
-        if (ui->stackedWidget->currentIndex()==0)
-            ui->stackedWidget->setCurrentIndex(1);
+        if (ui->stackedQueueInfoOptions->currentIndex()==0)
+            ui->stackedQueueInfoOptions->setCurrentIndex(1);
     }
     else
     {
@@ -109,11 +109,11 @@ void MainWindow::save_settings()
     if (dir.exists())
         settings->setDownload_path(dir.path());
 
-    settings->setExpand_details(!ui->textDetails->isHidden());
+    settings->setExpand_status_and_settings(!ui->stackedQueueInfoOptions->isHidden());
     settings->setLast_search(ui->editSearch->text());
     settings->setCombo_sort_type(ui->comboSortType->currentIndex());
     settings->setAuto_download(ui->checkAutoDownload->isChecked());
-    settings->setStacked_widget_active_page(ui->stackedWidget->currentIndex());
+    settings->setStacked_widget_active_page(ui->stackedQueueInfoOptions->currentIndex());
 
     // it doesn't yet save the download queue.
 }
@@ -628,31 +628,31 @@ void MainWindow::toggle_download_format()
 
 void MainWindow::on_btnShowStatus_clicked()
 {
-    if (ui->stackedWidget->currentIndex()!=0)
+    if (ui->stackedQueueInfoOptions->currentIndex()!=0)
     {
-        ui->stackedWidget->setCurrentIndex(0);
-        ui->stackedWidget->show();
+        ui->stackedQueueInfoOptions->setCurrentIndex(0);
+        ui->stackedQueueInfoOptions->show();
         return;
     }
 
-    if (ui->stackedWidget->isHidden())
-        ui->stackedWidget->show();
-    else ui->stackedWidget->hide();
+    if (ui->stackedQueueInfoOptions->isHidden())
+        ui->stackedQueueInfoOptions->show();
+    else ui->stackedQueueInfoOptions->hide();
 
 }
 
 void MainWindow::on_btnShowOptions_clicked()
 {
-    if (ui->stackedWidget->currentIndex()!=1)
+    if (ui->stackedQueueInfoOptions->currentIndex()!=1)
     {
-        ui->stackedWidget->setCurrentIndex(1);
-        ui->stackedWidget->show();
+        ui->stackedQueueInfoOptions->setCurrentIndex(1);
+        ui->stackedQueueInfoOptions->show();
         return;
     }
 
-    if (ui->stackedWidget->isHidden())
-        ui->stackedWidget->show();
-    else ui->stackedWidget->hide();
+    if (ui->stackedQueueInfoOptions->isHidden())
+        ui->stackedQueueInfoOptions->show();
+    else ui->stackedQueueInfoOptions->hide();
 
 }
 

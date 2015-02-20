@@ -22,7 +22,7 @@ void Settings::load()
 
     stacked_widget_active_page_ = settings_->value("Main/StackedWidgetActivePage").toUInt();
     download_path_ = settings_->value("Main/DownloadPath").toString();
-    expand_details_ = settings_->value("Main/ExpandDetails").toBool();
+    expand_status_and_settings_ = settings_->value("Main/ExpandStatusAndSettings").toBool();
     last_search_ = settings_->value("Main/LastSearch").toString();
     combo_sort_type_ = settings_->value("Main/comboSortType").toInt();
     open_in_player_after_download_ = settings_->value("Main/OpenInPlayerAfterDownload").toBool();
@@ -83,14 +83,14 @@ void Settings::setLast_search(const QString &last_search)
     settings_->setValue("Main/LastSearch", last_search);
 }
 
-bool Settings::expand_details() const
+bool Settings::expand_status_and_settings() const
 {
-    return expand_details_;
+    return expand_status_and_settings_;
 }
-void Settings::setExpand_details(bool expand_details)
+void Settings::setExpand_status_and_settings(bool expand_status_and_settings)
 {
-    expand_details_ = expand_details;
-    settings_->setValue("Main/ExpandDetails", expand_details);
+    expand_status_and_settings_ = expand_status_and_settings;
+    settings_->setValue("Main/ExpandStatusAndSettings", expand_status_and_settings);
 }
 
 uint Settings::stacked_widget_active_page() const

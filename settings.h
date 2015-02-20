@@ -25,8 +25,8 @@ public:
     QString last_search() const;
     void setLast_search(const QString &last_search);
 
-    bool expand_details() const;
-    void setExpand_details(bool expand_details);
+    bool expand_status_and_settings() const;
+    void setExpand_status_and_settings(bool expand_status_and_settings);
 
     uint stacked_widget_active_page() const;
     void setStacked_widget_active_page(uint stacked_widget_active_page);
@@ -79,7 +79,7 @@ private:
     QString download_path_ = ".";
     QString last_search_;
     bool auto_download_ = false;
-    bool expand_details_ = true; //rename to expand, because it is not the oposite of "always hide details"
+    bool expand_status_and_settings_ = true; //rename to expand, because it is not the oposite of "always hide details"
     uint stacked_widget_active_page_ = 0;
     int combo_sort_type_;
     bool open_in_player_after_download_ = false;
