@@ -34,16 +34,9 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QCheckBox" name="checkAlwaysHideDetails">
+         <widget class="QCheckBox" name="checkHideStatusButton">
           <property name="text">
-           <string>Hide the option of showing details.</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="checkAutoDownload">
-          <property name="text">
-           <string>Automatically start downloading when there's a video in the queue.</string>
+           <string>Hide the status button.</string>
           </property>
          </widget>
         </item>
@@ -73,7 +66,7 @@
           <item>
            <widget class="QPushButton" name="btnResetSizeAndPosition">
             <property name="text">
-             <string>Let WM chose size and position</string>
+             <string>Let WM choose size and position</string>
             </property>
            </widget>
           </item>

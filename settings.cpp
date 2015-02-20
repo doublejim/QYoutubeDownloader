@@ -20,14 +20,15 @@ void Settings::load()
     size_ = settings_->value("MainWindow/size", QSize(400, 400)).toSize();
     position_ = settings_->value("MainWindow/position", QPoint(200, 200)).toPoint();
 
+    stacked_widget_active_page_ = settings_->value("Main/StackedWidgetActivePage").toUInt();
     download_path_ = settings_->value("Main/DownloadPath").toString();
     expand_details_ = settings_->value("Main/ExpandDetails").toBool();
     last_search_ = settings_->value("Main/LastSearch").toString();
     combo_sort_type_ = settings_->value("Main/comboSortType").toInt();
     open_in_player_after_download_ = settings_->value("Main/OpenInPlayerAfterDownload").toBool();
+    auto_download_ = settings_->value("Main/AutoDownload").toBool();
 
-    always_hide_details_ = settings_->value("Settings/AlwaysHideDetails").toBool();
-    auto_download_ = settings_->value("Settings/AutoDownload").toBool();
+    hide_status_button_ = settings_->value("Settings/HideStatusButton").toBool();
     dark_style_ = settings_->value("Settings/DarkStyle").toBool();
     do_not_save_size_and_position_ = settings_->value("Settings/DoNotSaveSizeAndPosition").toBool();
     media_player_path_ = settings_->value("Settings/MediaPlayer").toString();
@@ -41,7 +42,6 @@ void Settings::defaults()
     if(output_template() == "")
         setOutput_template("%(uploader)s - %(title)s.%(ext)s");
 }
-
 
 QSize Settings::size() const
 {
@@ -93,6 +93,17 @@ void Settings::setExpand_details(bool expand_details)
     settings_->setValue("Main/ExpandDetails", expand_details);
 }
 
+uint Settings::stacked_widget_active_page() const
+{
+    return stacked_widget_active_page_;
+}
+
+void Settings::setStacked_widget_active_page(uint stacked_widget_active_page)
+{
+    stacked_widget_active_page_ = stacked_widget_active_page;
+    settings_->setValue("Main/StackedWidgetActivePage", stacked_widget_active_page);
+}
+
 int Settings::combo_sort_type() const
 {
     return combo_sort_type_;
@@ -113,14 +124,14 @@ void Settings::setOpen_in_player_after_download(bool value)
     settings_->setValue("Main/OpenInPlayerAfterDownload", value);
 }
 
-bool Settings::always_hide_details() const
+bool Settings::hide_status_button() const
 {
-    return always_hide_details_;
+    return hide_status_button_;
 }
-void Settings::setAlways_hide_details(bool always_hide_details)
+void Settings::setHide_status_button(bool hide_status_button)
 {
-    always_hide_details_ = always_hide_details;
-    settings_->setValue("Settings/AlwaysHideDetails", always_hide_details);
+    hide_status_button_ = hide_status_button;
+    settings_->setValue("Settings/HideStatusButton", hide_status_button);
 }
 
 bool Settings::auto_download() const
@@ -130,7 +141,7 @@ bool Settings::auto_download() const
 void Settings::setAuto_download(bool auto_download)
 {
     auto_download_ = auto_download;
-    settings_->setValue("Settings/AutoDownload", auto_download);
+    settings_->setValue("Main/AutoDownload", auto_download);
 }
 
 bool Settings::dark_style() const

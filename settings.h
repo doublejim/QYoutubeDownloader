@@ -28,15 +28,20 @@ public:
     bool expand_details() const;
     void setExpand_details(bool expand_details);
 
+    uint stacked_widget_active_page() const;
+    void setStacked_widget_active_page(uint stacked_widget_active_page);
+
     int combo_sort_type() const;
     void setCombo_sort_type(int combo_sort_type);
 
-    // Settings window
-    bool always_hide_details() const;
-    void setAlways_hide_details(bool always_hide_details);
+    // Main - options
 
     bool auto_download() const;
     void setAuto_download(bool auto_download);
+
+    // Settings window
+    bool hide_status_button() const;
+    void setHide_status_button(bool hide_status_button);
 
     bool dark_style() const;
     void setDark_style(bool dark_style);
@@ -73,13 +78,14 @@ private:
 
     QString download_path_ = ".";
     QString last_search_;
+    bool auto_download_ = false;
     bool expand_details_ = true; //rename to expand, because it is not the oposite of "always hide details"
+    uint stacked_widget_active_page_ = 0;
     int combo_sort_type_;
     bool open_in_player_after_download_ = false;
 
     // Settings window
-    bool always_hide_details_ = false;
-    bool auto_download_ = false;
+    bool hide_status_button_ = false;
     bool dark_style_ = false;
     bool do_not_save_size_and_position_ = false;
     QString media_player_path_;

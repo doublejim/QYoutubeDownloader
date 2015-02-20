@@ -23,8 +23,7 @@ SettingsWindow::~SettingsWindow()
 
 void SettingsWindow::load_settings()
 {
-    ui->checkAlwaysHideDetails->setChecked(settings->always_hide_details());
-    ui->checkAutoDownload->setChecked(settings->auto_download());
+    ui->checkHideStatusButton->setChecked(settings->hide_status_button());
     ui->checkDarkStyle->setChecked(settings->dark_style());
     ui->checkDoNotSaveSizeAndPosition->setChecked(settings->do_not_save_size_and_position());
     ui->editMediaPlayerPath->setText(settings->media_player_path());
@@ -34,8 +33,7 @@ void SettingsWindow::load_settings()
 
 void SettingsWindow::save()
 {
-    settings->setAlways_hide_details(ui->checkAlwaysHideDetails->isChecked());
-    settings->setAuto_download(ui->checkAutoDownload->isChecked());
+    settings->setHide_status_button(ui->checkHideStatusButton->isChecked());
     settings->setDark_style(ui->checkDarkStyle->isChecked());
     settings->setDo_not_save_size_and_position(ui->checkDoNotSaveSizeAndPosition->isChecked());
     settings->setMedia_player_path(ui->editMediaPlayerPath->text());

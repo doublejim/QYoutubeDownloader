@@ -53,7 +53,6 @@ private slots:
     void create_item_title_from_its_data(QListWidgetItem* item);
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
-    void on_btnToggleDetails_clicked();
     void on_btnAddVideoToQueue_clicked();
     void on_editDownloadPath_textChanged();
     void on_listVideos_doubleClicked();
@@ -63,6 +62,10 @@ private slots:
     void customContextMenuRequested(QPoint);
     void toggle_download_format();
     void on_listVideoQueue_doubleClicked();
+    void on_btnShowStatus_clicked();
+    void on_btnShowOptions_clicked();
+
+    void on_checkAutoDownload_clicked();
 
 private:
     Ui::MainWindow *ui;

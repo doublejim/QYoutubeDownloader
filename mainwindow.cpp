@@ -52,28 +52,31 @@ void MainWindow::restore_settings()
     ui->editSearch->setText(settings->last_search());
     ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
     ui->checkOpenInPlayerAfterDownload->setChecked(settings->open_in_player_after_download());
+    ui->checkAutoDownload->setChecked(settings->auto_download());
+    ui->stackedWidget->setCurrentIndex(settings->stacked_widget_active_page());
 
     if (settings->expand_details())
-        ui->textDetails->show();
+        ui->stackedWidget->show();
     else
-        ui->textDetails->hide();
+        ui->stackedWidget->hide();
 
     // it doesn't yet load the download queue.
     apply_settings();
 }
 
-// Settings that should be applied on while program is running
-// This function is also called fra the settings window, whenever ok or apply is pressed
+// Settings that should be applied while program is running
+// This function is also called from the settings window, whenever ok or apply is pressed
 void MainWindow::apply_settings()
 {
-    if (settings->always_hide_details())
+    if (settings->hide_status_button())
     {
-        ui->btnToggleDetails->hide();
-        ui->textDetails->hide();
+        ui->btnShowStatus->hide();
+        if (ui->stackedWidget->currentIndex()==0)
+            ui->stackedWidget->setCurrentIndex(1);
     }
     else
     {
-        ui->btnToggleDetails->show();
+        ui->btnShowStatus->show();
     }
 
     init_color_scheme();
@@ -104,9 +107,10 @@ void MainWindow::save_settings()
         settings->setDownload_path(dir.path());
 
     settings->setExpand_details(!ui->textDetails->isHidden());
-
     settings->setLast_search(ui->editSearch->text());
     settings->setCombo_sort_type(ui->comboSortType->currentIndex());
+    settings->setAuto_download(ui->checkAutoDownload->isChecked());
+    settings->setStacked_widget_active_page(ui->stackedWidget->currentIndex());
 
     // it doesn't yet save the download queue.
 }
@@ -532,12 +536,6 @@ void MainWindow::on_btnBrowse_clicked() // browse for a directory
     select_directory();
 }
 
-void MainWindow::on_btnToggleDetails_clicked() // toggle details
-{
-    if (ui->textDetails->isHidden()) ui->textDetails->show();
-    else ui->textDetails->hide();
-}
-
 void MainWindow::on_btnAddVideoToQueue_clicked() // add video to download list
 {
     DialogNewDownload dialog1;
@@ -609,4 +607,39 @@ void MainWindow::toggle_download_format()
         queue_items[item_key].toggleFormat();
         create_item_title_from_its_data(item);
     }
+}
+
+void MainWindow::on_btnShowStatus_clicked()
+{
+    if (ui->stackedWidget->currentIndex()!=0)
+    {
+        ui->stackedWidget->setCurrentIndex(0);
+        ui->stackedWidget->show();
+        return;
+    }
+
+    if (ui->stackedWidget->isHidden())
+        ui->stackedWidget->show();
+    else ui->stackedWidget->hide();
+
+}
+
+void MainWindow::on_btnShowOptions_clicked()
+{
+    if (ui->stackedWidget->currentIndex()!=1)
+    {
+        ui->stackedWidget->setCurrentIndex(1);
+        ui->stackedWidget->show();
+        return;
+    }
+
+    if (ui->stackedWidget->isHidden())
+        ui->stackedWidget->show();
+    else ui->stackedWidget->hide();
+
+}
+
+void MainWindow::on_checkAutoDownload_clicked()
+{
+    settings->setAuto_download(ui->checkAutoDownload->isChecked());
 }
