@@ -20,11 +20,11 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
 
     if (ui->editDownloadPath->text()=="")  ui->editDownloadPath->setText(".");
 
-    QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), ui->listVideoQueue);
-    connect(shortcut, SIGNAL(activated()), this, SLOT(delete_selected_item_on_queue()));
+    QShortcut* shortcut_del = new QShortcut(QKeySequence(Qt::Key_Delete),this);
+    connect(shortcut_del, SIGNAL(activated()), this, SLOT(shortcut_delete()));
 
-    QShortcut* enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->listVideos);
-    connect(enter, SIGNAL(activated()), this, SLOT(on_listVideos_doubleClicked()));
+    QShortcut* shortcut_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->listVideos);
+    connect(shortcut_enter, SIGNAL(activated()), this, SLOT(on_listVideos_doubleClicked()));
 
     QShortcut* shortcut_ctrl_v = new QShortcut(QKeySequence(tr("Ctrl+V")), ui->listVideoQueue);
     connect(shortcut_ctrl_v, SIGNAL(activated()),this,SLOT(listVideoQueue_paste()));
@@ -155,28 +155,30 @@ void MainWindow::listVideoQueue_paste()
     }
 }
 
-// TODO: ensure path has a \ or / as last char. Also make possible to send arguments to player.
+// TODO: Make it possible to send arguments to player.
 void MainWindow::open_video()
 {
+    fix_download_path();
+
     QListWidgetItem *item = ui->listVideos->currentItem();
     QString dir = ui->editDownloadPath->text();
 
-    QString url = dir + item->text(); //todo ensure dir ends with / or \ dending on OS
+    QString file = dir + item->text();
 
-    play_video(url);
+    play_video(file);
 
     going_to_play_video = false; //(it already did at this point)
 }
 
-void MainWindow::play_video(QString url)
+void MainWindow::play_video(QString file)
 {
     QString program = settings->media_player_path();
     QStringList arguments;
 
     if (settings->media_player_args() != "")
-        arguments << settings->media_player_args() << url;
+        arguments << settings->media_player_args() << file;
     else
-        arguments << url;
+        arguments << file;
 
     QProcess* play_video = new QProcess();
     play_video->start(program, arguments);
@@ -644,6 +646,43 @@ void MainWindow::toggle_download_format()
         queue_items[item_key].toggleFormat();
         create_item_title_from_its_data(item);
     }
+}
+
+void MainWindow::delete_file_from_disk()
+{
+    if (ui->listVideos->currentRow()==-1) return;
+
+    QMessageBox message;
+    if (message.question(this, "Delete the file?", "Are you sure you want to delete the\nselected file from disk?",
+                         QMessageBox::Yes | QMessageBox::No, QMessageBox::No)==QMessageBox::Yes)
+    {
+        fix_download_path();
+        QListWidgetItem* item = ui->listVideos->currentItem();
+        QFile file (ui->editDownloadPath->text() + item->text());
+
+        if (file.remove())
+        {
+            QMessageBox response;
+            response.setText("Deleted.");
+            response.exec();
+            refresh_filelist();
+            refresh_filelist_filtering();
+        }
+        else
+        {
+            QMessageBox response;
+            response.setText("Error: File could not be deleted!");
+            response.exec();
+        }
+    }
+}
+
+void MainWindow::shortcut_delete()
+{
+    if (ui->listVideoQueue->hasFocus())
+        delete_selected_item_on_queue();
+    else if (ui->listVideos->hasFocus())
+        delete_file_from_disk();
 }
 
 void MainWindow::on_btnShowStatus_clicked()

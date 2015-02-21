@@ -14,6 +14,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QClipboard>
 #include <QMimeData>
+#include <QFile>
 
 #include "settingswindow.h"
 #include "settings.h"
@@ -71,6 +72,8 @@ private slots:
     void on_btnShowOptions_clicked();
     void on_checkAutoDownload_clicked();
     void listVideoQueue_paste();
+    void delete_file_from_disk();
+    void shortcut_delete();
 
 private:
     Ui::MainWindow *ui;
@@ -79,7 +82,7 @@ private:
     void init_color_scheme();
     void save_settings();
     void restore_settings();
-    void play_video(QString url);
+    void play_video(QString file);
     void resolve_title(uint item_key, QString url);
 
     QMap <uint,QueueItem> queue_items; // item data map.
