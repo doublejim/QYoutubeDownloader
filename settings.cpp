@@ -1,12 +1,9 @@
 #include "settings.h"
 
-Settings::Settings()
+Settings::Settings(QString application_dir_path)
 {
-    // I have changed the settings location, because I hate when small programs
-    // write their config files in a directory under their organization name (even though Triple Jim is awesome).
-    // It is always like, QYoutubeDownloader, who wrote that crap?
-    // I want to find the damn config file. Why can't they put it in a directory, named after the bloddy program.
     settings_ = new QSettings(QSettings::IniFormat, QSettings::UserScope, "QYoutubeDownloader", "config");
+    application_dir_path_ = application_dir_path;
     load();
 }
 
@@ -34,6 +31,8 @@ void Settings::load()
     media_player_path_ = settings_->value("Settings/MediaPlayer").toString();
     media_player_args_ = settings_->value("Settings/MediaPlayerArgs").toString();
     output_template_ = settings_->value("Settings/OutputTemplate").toString();
+    youtube_dl_executable_ = settings_->value("Settings/Youtube-dlExecutable").toString();
+    ffmpeg_path_ = settings_->value("Settings/FFMPEGPath").toString();
     defaults();
 }
 
@@ -41,6 +40,24 @@ void Settings::defaults()
 {
     if(output_template() == "")
         setOutput_template("%(uploader)s - %(title)s.%(ext)s");
+
+    if(youtube_dl_executable() == "")
+    {
+        QDir program(application_dir_path_);
+        #ifdef Q_OS_LINUX
+            setYoutube_dl_executable(program.absoluteFilePath("youtube-dl"));
+        #elif defined(Q_OS_WIN)
+            youtube_dl_executable_ = program.absoluteFilePath("youtube-dl.exe");
+        #else
+        #error "We don't support that version yet..."
+        #endif
+    }
+    if(ffmpeg_path() == "")
+    {
+        QDir ffmpeg(application_dir_path_);
+        setFfmpeg_path(ffmpeg.absoluteFilePath("ffmpeg"));
+    }
+
 }
 
 QSize Settings::size() const
@@ -193,4 +210,30 @@ void Settings::setOutput_template(const QString &output_template)
 {
     output_template_ = output_template;
     settings_->setValue("Settings/OutputTemplate", output_template);
+}
+
+QString Settings::youtube_dl_executable() const
+{
+    return youtube_dl_executable_;
+}
+void Settings::setYoutube_dl_executable(const QString &youtube_dl_executable)
+{
+    youtube_dl_executable_ = youtube_dl_executable;
+    if(youtube_dl_executable == "")
+        defaults();
+    else
+        settings_->setValue("Settings/Youtube-dlExecutable", youtube_dl_executable);
+}
+
+QString Settings::ffmpeg_path() const
+{
+    return ffmpeg_path_;
+}
+void Settings::setFfmpeg_path(const QString &ffmpeg_path)
+{
+    ffmpeg_path_ = ffmpeg_path;
+    if(ffmpeg_path == "")
+        defaults();
+    else
+        settings_->setValue("Settings/FFMPEGPath", ffmpeg_path);
 }

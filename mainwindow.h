@@ -19,6 +19,7 @@
 #include "settings.h"
 #include "queueitem.h"
 #include "dialognewdownload.h"
+#include "aboutwindow.h"
 
 using namespace std;
 
@@ -61,6 +62,8 @@ private slots:
     void on_editSearch_textChanged();
     void on_comboSortType_currentIndexChanged(int a);
     void on_actionSettings_Menu_triggered();
+    void on_actionQuit_triggered();
+    void on_actionAbout_triggered();
     void customContextMenuRequested(QPoint);
     void toggle_download_format();
     void on_listVideoQueue_doubleClicked();
