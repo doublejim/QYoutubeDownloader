@@ -321,10 +321,12 @@ void MainWindow::download_top_video()
         default: format_to_download = "bestvideo+bestaudio"; break;
     }
 
-    arguments << queue_items[current_item_key].url
-              << "-o" << ui->editDownloadPath->text() + settings->output_template()
+    arguments << "-o" << ui->editDownloadPath->text() + settings->output_template()
               << "-f" << format_to_download
-              << "--ffmpeg-location" << settings->ffmpeg_path();
+              << "--ffmpeg-location" << settings->ffmpeg_path()
+              << "--merge-output-format" << "mkv"
+              << queue_items[current_item_key].url;
+
 
     youtube_dl = new QProcess(this);
     connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
@@ -477,6 +479,8 @@ void MainWindow::refresh_filelist() // stores a list of filenames from the downl
     filters << "*.mp3";
     filters << "*.ogg";
     filters << "*.flv";
+    filters << "*.webm";
+    filters << "*.mkv";
     ui->listVideos->clear();
     complete_filelist.clear();
 
