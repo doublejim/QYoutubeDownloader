@@ -29,6 +29,8 @@ void SettingsWindow::load_settings()
     ui->editMediaPlayerPath->setText(settings->media_player_path());
     ui->editMediaPlayerArgs->setText(settings->media_player_args());
     ui->editOutputTemplate->setText(settings->output_template());
+    ui->editYoutubedlExecutable->setText(settings->youtube_dl_executable());
+    ui->editFFMPEGPath->setText(settings->ffmpeg_path());
 }
 
 void SettingsWindow::save()
@@ -39,6 +41,8 @@ void SettingsWindow::save()
     settings->setMedia_player_path(ui->editMediaPlayerPath->text());
     settings->setMedia_player_args(ui->editMediaPlayerArgs->text());
     settings->setOutput_template(ui->editOutputTemplate->text());
+    settings->setYoutube_dl_executable(ui->editYoutubedlExecutable->text());
+    settings->setFfmpeg_path(ui->editFFMPEGPath->text());
 
     main_window_->apply_settings();
 }

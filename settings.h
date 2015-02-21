@@ -3,11 +3,12 @@
 #include <QSettings>
 #include <QSize>
 #include <QPoint>
+#include <QDir>
 
 class Settings
 {
 public:
-    Settings();
+    Settings(QString application_dir_path);
     ~Settings();
 
     // MainWindow
@@ -61,6 +62,12 @@ public:
     bool do_not_save_size_and_position() const;
     void setDo_not_save_size_and_position(bool do_not_save_size_and_position);
 
+    QString youtube_dl_executable() const;
+    void setYoutube_dl_executable(const QString &youtube_dl_executable);
+
+    QString ffmpeg_path() const;
+    void setFfmpeg_path(const QString &ffmpeg_path);
+
 private:
     QSettings *settings_;
     void load();
@@ -69,6 +76,8 @@ private:
     // Tip i just learned. If you put curser on a member vaiable (without getters and setters)
     // and presses alt+enter
     // then it gives the option to create getter/setter member functions.
+
+    QString application_dir_path_;
 
     // MainWindow
     QSize size_;
@@ -91,6 +100,8 @@ private:
     QString media_player_path_;
     QString media_player_args_;
     QString output_template_;
+    QString youtube_dl_executable_;
+    QString ffmpeg_path_;
 };
 
 #endif // SETTINGS_H

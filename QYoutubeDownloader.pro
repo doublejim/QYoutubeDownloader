@@ -28,15 +28,18 @@ SOURCES += main.cpp\
     settingswindow.cpp \
     queueitem.cpp \
     settings.cpp \
-    sharedmemory.cpp
+    sharedmemory.cpp \
+    aboutwindow.cpp
 
 HEADERS  += mainwindow.h \
     dialognewdownload.h \
     settingswindow.h \
     queueitem.h \
     settings.h \
-    sharedmemory.h
+    sharedmemory.h \
+    aboutwindow.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \
-    settingswindow.ui
+    settingswindow.ui \
+    aboutwindow.ui

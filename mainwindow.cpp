@@ -15,7 +15,7 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     ui->labelVideo->hide();
     ui->labelAudio->hide();
 
-    settings = new Settings();
+    settings = new Settings(qApp->applicationDirPath());
     restore_settings();
 
     if (ui->editDownloadPath->text()=="")  ui->editDownloadPath->setText(".");
@@ -191,7 +191,7 @@ void MainWindow::select_directory()
     if (dir.exists())
         dialog.setDirectory(ui->editDownloadPath->text());
     else
-        dialog.setDirectory(".");
+        dialog.setDirectory(QDir::currentPath() + "/");
 
     QStringList filters;
     filters << "*.mp4";
@@ -289,9 +289,10 @@ void MainWindow::check_download_path()
 void MainWindow::fix_download_path()
 {
     QString dir = QDir::cleanPath(ui->editDownloadPath->text()); // saves a clean version of the path.
-    ui->editDownloadPath->setText(dir); // puts back the clean version of the path.
+    if(dir == ".")
+        dir = QDir::currentPath();
 
-    if (dir[dir.length()-1]!='/' &&
+    if (dir[dir.length()-1]!='/' ||
         dir[dir.length()-1]!='\\' )
         ui->editDownloadPath->setText(dir+'/');
 }
@@ -306,7 +307,7 @@ void MainWindow::download_top_video()
                                return; }
     fix_download_path(); // must happen AFTER the above check, because QDir::cleanPath causes a crash if the path is empty.
 
-    QString program = "youtube-dl";
+    QString program = settings->youtube_dl_executable();
     QStringList arguments;
 
     QListWidgetItem* current_item = ui->listVideoQueue->item(0);
@@ -320,7 +321,10 @@ void MainWindow::download_top_video()
         default: format_to_download = "bestvideo+bestaudio"; break;
     }
 
-    arguments << queue_items[current_item_key].url << "-o" << ui->editDownloadPath->text() + settings->output_template() << "-f" << format_to_download;
+    arguments << queue_items[current_item_key].url
+              << "-o" << ui->editDownloadPath->text() + settings->output_template()
+              << "-f" << format_to_download
+              << "--ffmpeg-location" << settings->ffmpeg_path();
 
     youtube_dl = new QProcess(this);
     connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
@@ -408,7 +412,7 @@ void MainWindow::resolve_title(uint item_key, QString url)
 {
     try
     {
-        QString program = "youtube-dl";
+        QString program = settings->youtube_dl_executable();
 
         QStringList arguments;
         arguments << "-e" << url;
@@ -600,6 +604,18 @@ void MainWindow::on_actionSettings_Menu_triggered()
     SettingsWindow window(this);
     window.setModal(false);
     window.exec();
+}
+
+void MainWindow::on_actionQuit_triggered()
+{
+    qapp_->quit();
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+    AboutWindow about(this);
+    about.setModal(false);
+    about.exec();
 }
 
 void MainWindow::customContextMenuRequested(QPoint pos)
