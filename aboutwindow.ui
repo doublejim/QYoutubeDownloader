@@ -32,7 +32,7 @@
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;QYoutubeDownloader&lt;/span&gt;&lt;/p&gt;&lt;p&gt;by&lt;/p&gt;&lt;p&gt;Nikolai (doublejim)&lt;/p&gt;&lt;p&gt;Johan Straarup (jstraarup)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;If you need help you can write Johan at:&lt;/p&gt;&lt;p&gt;johan.straarup [at] gmail [dot] com&lt;/p&gt;&lt;p&gt;If you find a bug or want a feature, please create an issue on: &lt;/p&gt;&lt;p&gt;http://tripplejim.herokuapp.com&lt;/p&gt;&lt;p&gt;You do not need to sign up or be a programmer to create an issue -&lt;/p&gt;&lt;p&gt;We are friendly people :-)&lt;/p&gt;&lt;p&gt;Hope you enjoy our software. Have a nice day :-)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;QYoutubeDownloader&lt;/span&gt;&lt;/p&gt;&lt;p&gt;by&lt;/p&gt;&lt;p&gt;Nikolai (doublejim)&lt;/p&gt;&lt;p&gt;Johan Straarup (jstraarup)&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;If you need help you can write Johan at:&lt;/p&gt;&lt;p&gt;johan.straarup [at] gmail [dot] com&lt;/p&gt;&lt;p&gt;If you find a bug or want a feature, please create an issue on: &lt;/p&gt;&lt;p&gt;http://triplejim.herokuapp.com&lt;/p&gt;&lt;p&gt;You do not need to sign up or be a programmer to create an issue -&lt;/p&gt;&lt;p&gt;We are friendly people :-)&lt;/p&gt;&lt;p&gt;Hope you enjoy our software. Have a nice day :-)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>

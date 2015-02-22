@@ -95,8 +95,6 @@ uint MainWindow::default_format()
 
 void MainWindow::save_settings()
 {
-    qDebug() << __func__;
-
     if(!settings->do_not_save_size_and_position())
     {
         settings->setSize(size());
@@ -195,10 +193,6 @@ void MainWindow::select_directory()
     else
         dialog.setDirectory(QDir::currentPath() + "/");
 
-    QStringList filters;
-    filters << "*.mp4";
-    dialog.setNameFilters(filters);
-
     if (dialog.exec())
     {
         ui->editDownloadPath->setText(dialog.directory().path());
@@ -294,9 +288,7 @@ void MainWindow::fix_download_path()
     if(dir == ".")
         dir = QDir::currentPath();
 
-    if (dir[dir.length()-1]!='/' ||
-        dir[dir.length()-1]!='\\' )
-        ui->editDownloadPath->setText(dir+'/');
+    ui->editDownloadPath->setText(dir+'/');
 }
 
 void MainWindow::download_top_video()
