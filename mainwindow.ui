@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>697</width>
+    <width>771</width>
     <height>523</height>
    </rect>
   </property>
@@ -28,8 +28,14 @@
         </item>
         <item>
          <widget class="QListWidget" name="listVideoQueue">
+          <property name="dragEnabled">
+           <bool>false</bool>
+          </property>
           <property name="selectionMode">
            <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+          <property name="movement">
+           <enum>QListView::Snap</enum>
           </property>
          </widget>
         </item>
@@ -343,8 +349,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>697</width>
-     <height>21</height>
+     <width>771</width>
+     <height>19</height>
     </rect>
    </property>
    <property name="defaultUp">

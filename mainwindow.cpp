@@ -469,7 +469,7 @@ void MainWindow::resolve_playlist_titles(QProcess *youtube_dl, int item_that_is_
             item = new QListWidgetItem(line);
             item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
             queue_items[unique_item_key].title = line;
-            queue_items[unique_item_key].format = ui->radioAudioVideo ? 1 : 0;
+            queue_items[unique_item_key].format = ui->radioAudioVideo->isChecked() ? 0 : 1;
             create_item_title_from_its_data(item);
             ui->listVideoQueue->addItem(item);
         }
