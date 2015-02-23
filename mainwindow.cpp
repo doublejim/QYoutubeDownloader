@@ -463,30 +463,26 @@ void MainWindow::resolve_playlist_titles(QProcess *youtube_dl, int item_that_is_
 
     while (!line.isNull())
     {
-        if(!line.isNull())
+        //For each video it gets 2 lines, 1st Title, 2nd video ID
+        if(is_title)
         {
-            //For each video it gets 2 lines, 1st Title, 2nd video ID
-            if(is_title)
-            {
-                item = new QListWidgetItem(line);
-                item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
-                queue_items[unique_item_key].title = line;
-                queue_items[unique_item_key].format = 0;
-                create_item_title_from_its_data(item);
-                ui->listVideoQueue->addItem(item);
-            }
-            else
-            {
-                queue_items[unique_item_key].url = "https://www.youtube.com/watch?v=" + line;
-                ++unique_item_key;
-            }
-
-            is_title = !is_title;
+            item = new QListWidgetItem(line);
+            item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
+            queue_items[unique_item_key].title = line;
+            queue_items[unique_item_key].format = ui->radioAudioVideo ? 1 : 0;
+            create_item_title_from_its_data(item);
+            ui->listVideoQueue->addItem(item);
+        }
+        else
+        {
+            queue_items[unique_item_key].url = "https://www.youtube.com/watch?v=" + line;
+            ++unique_item_key;
         }
 
         if(youtube_dl->isOpen())
             youtube_dl->waitForReadyRead();
 
+        is_title = !is_title;
         line = stream.readLine();
     }
 }
