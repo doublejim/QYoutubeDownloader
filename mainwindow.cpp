@@ -411,12 +411,19 @@ void MainWindow::resolve_title(uint item_key, QString url)
         QString program = settings->youtube_dl_executable();
 
         QStringList arguments;
-        arguments << "-e" << url;
+        arguments << "-e" << "--get-id" << url;
 
         QProcess youtube_dl;
 
         youtube_dl.start(program, arguments);
         youtube_dl.waitForReadyRead();
+
+        if(url.contains("youtube.com/playlist"))
+        {
+            resolve_playlist_titles(&youtube_dl, (int)item_key);
+            youtube_dl.close();
+            return;
+        }
         QString title = youtube_dl.readAllStandardOutput().simplified();
 
         youtube_dl.close();
@@ -435,10 +442,56 @@ void MainWindow::resolve_title(uint item_key, QString url)
                 ui->listVideoQueue->update();
                 return;
             }
+
+
         }
     }
     catch(int e)
     {}
+}
+
+void MainWindow::resolve_playlist_titles(QProcess *youtube_dl, int item_that_is_playlist)
+{
+    QTextStream stream(youtube_dl);
+    bool is_title = true;
+    QString line = stream.readLine();
+    QListWidgetItem *item;
+
+    delete ui->listVideoQueue->itemAt(item_that_is_playlist, 0);
+    queue_items.remove(item_that_is_playlist);
+
+    qDebug() << "ok";
+    while (!line.isNull())
+    {
+        qDebug() << "her";
+        if(!line.isNull())
+        {
+
+            qDebug()<<line;
+            if(is_title)
+            {
+                item = new QListWidgetItem(line);
+                item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
+                queue_items[unique_item_key].title = line;
+                queue_items[unique_item_key].format = 0;
+                create_item_title_from_its_data(item);
+                ui->listVideoQueue->addItem(item);
+            }
+            else
+            {
+                queue_items[unique_item_key].url = "https://www.youtube.com/watch?v=" + line;
+                ++unique_item_key;
+            }
+
+            is_title = !is_title;
+        }
+        if(youtube_dl->isOpen())
+        {
+            youtube_dl->waitForReadyRead();
+        }
+        line = stream.readLine();
+    }//while (!line.isNull());
+    qDebug() << "slut";
 }
 
 void MainWindow::add_video_to_download_list(QString url, uint format)
