@@ -424,6 +424,7 @@ void MainWindow::resolve_title(uint item_key, QString url)
             youtube_dl.close();
             return;
         }
+
         QString title = youtube_dl.readAllStandardOutput().simplified();
 
         youtube_dl.close();
@@ -460,14 +461,11 @@ void MainWindow::resolve_playlist_titles(QProcess *youtube_dl, int item_that_is_
     delete ui->listVideoQueue->itemAt(item_that_is_playlist, 0);
     queue_items.remove(item_that_is_playlist);
 
-    qDebug() << "ok";
     while (!line.isNull())
     {
-        qDebug() << "her";
         if(!line.isNull())
         {
-
-            qDebug()<<line;
+            //For each video it gets 2 lines, 1st Title, 2nd video ID
             if(is_title)
             {
                 item = new QListWidgetItem(line);
@@ -485,13 +483,12 @@ void MainWindow::resolve_playlist_titles(QProcess *youtube_dl, int item_that_is_
 
             is_title = !is_title;
         }
+
         if(youtube_dl->isOpen())
-        {
             youtube_dl->waitForReadyRead();
-        }
+
         line = stream.readLine();
-    }//while (!line.isNull());
-    qDebug() << "slut";
+    }
 }
 
 void MainWindow::add_video_to_download_list(QString url, uint format)
