@@ -74,6 +74,8 @@ private slots:
     void listVideoQueue_paste();
     void delete_file_from_disk();
     void shortcut_delete();
+    void autostart_download(const QModelIndex&, int, int);
+
 
 private:
     Ui::MainWindow *ui;

@@ -29,6 +29,8 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     QShortcut* shortcut_ctrl_v = new QShortcut(QKeySequence(tr("Ctrl+V")), ui->listVideoQueue);
     connect(shortcut_ctrl_v, SIGNAL(activated()),this,SLOT(listVideoQueue_paste()));
 
+    connect(ui->listVideoQueue->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)), this, SLOT(autostart_download(const QModelIndex&, int, int)));
+
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
     qRegisterMetaType<QVector<int> >("QVector<int>");
@@ -264,7 +266,7 @@ void MainWindow::check_download_path()
 {
     QDir dir = ui->editDownloadPath->text();
 
-    if (dir.exists()==false || ui->editDownloadPath->text()=="")
+    if (dir.exists()==false || ui->editDownloadPath->text() == "")
     {
         complete_filelist.clear(); // must be done: in case the filter is changed, so it doesn't show any files from the previous path.
         ui->listVideos->clear();
@@ -273,7 +275,7 @@ void MainWindow::check_download_path()
         ui->listVideos->setStyleSheet("font: italic 8pt \"MS Shell Dlg 2\"");
         return;
     }
-    else if (complete_filelist.size()==0)
+    else if (complete_filelist.size() == 0)
     {
         ui->listVideos->clear();
         QListWidgetItem *item = new QListWidgetItem("[no mp4 files found...]");
@@ -288,7 +290,7 @@ void MainWindow::fix_download_path()
     if(dir == ".")
         dir = QDir::currentPath();
 
-    ui->editDownloadPath->setText(dir+'/');
+    ui->editDownloadPath->setText(dir + '/');
 }
 
 void MainWindow::download_top_video()
@@ -296,7 +298,7 @@ void MainWindow::download_top_video()
     if (ui->listVideoQueue->count()==0) return; // quits if the list is empty
 
     QDir dir = ui->editDownloadPath->text();
-    if (dir.exists()==false || ui->editDownloadPath->text()=="") { QMessageBox message; message.setWindowTitle("Invalid folder.");
+    if (dir.exists()==false || ui->editDownloadPath->text() == "") { QMessageBox message; message.setWindowTitle("Invalid folder.");
                                message.setText("The download folder is invalid."); message.exec();
                                return; }
     fix_download_path(); // must happen AFTER the above check, because QDir::cleanPath causes a crash if the path is empty.
@@ -321,10 +323,9 @@ void MainWindow::download_top_video()
               << "--merge-output-format" << "mkv"
               << queue_items[current_item_key].url;
 
-
     youtube_dl = new QProcess(this);
-    connect (youtube_dl,SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
-    connect (youtube_dl,SIGNAL(finished(int)),this,SLOT(downloading_ended(int)));
+    connect (youtube_dl, SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
+    connect (youtube_dl, SIGNAL(finished(int)), this, SLOT(downloading_ended(int)));
 
     ui->progressVideo->setValue(0);
     ui->progressAudio->setValue(0);
@@ -413,21 +414,21 @@ void MainWindow::resolve_title(uint item_key, QString url)
         QStringList arguments;
         arguments << "-e" << "--get-id" << url;
 
-        QProcess youtube_dl;
+        QProcess get_title;
 
-        youtube_dl.start(program, arguments);
-        youtube_dl.waitForReadyRead();
+        get_title.start(program, arguments);
+        get_title.waitForReadyRead();
 
         if(url.contains("youtube.com/playlist"))
         {
-            resolve_playlist_titles(&youtube_dl, (int)item_key);
-            youtube_dl.close();
+            resolve_playlist_titles(&get_title, (int)item_key);
+            get_title.close();
             return;
         }
 
-        QString title = youtube_dl.readAllStandardOutput().simplified();
+        QString title = get_title.readAllStandardOutput().simplified();
 
-        youtube_dl.close();
+        get_title.close();
 
         if (title == "")
             return;
@@ -451,15 +452,12 @@ void MainWindow::resolve_title(uint item_key, QString url)
     {}
 }
 
-void MainWindow::resolve_playlist_titles(QProcess *youtube_dl, int item_that_is_playlist)
+void MainWindow::resolve_playlist_titles(QProcess *get_title, int item_that_is_playlist)
 {
-    QTextStream stream(youtube_dl);
+    QTextStream stream(get_title);
     bool is_title = true;
     QString line = stream.readLine();
     QListWidgetItem *item;
-
-    delete ui->listVideoQueue->itemAt(item_that_is_playlist, 0);
-    queue_items.remove(item_that_is_playlist);
 
     while (!line.isNull())
     {
@@ -471,41 +469,47 @@ void MainWindow::resolve_playlist_titles(QProcess *youtube_dl, int item_that_is_
             queue_items[unique_item_key].title = line;
             queue_items[unique_item_key].format = ui->radioAudioVideo->isChecked() ? 0 : 1;
             create_item_title_from_its_data(item);
-            ui->listVideoQueue->addItem(item);
         }
         else
         {
             queue_items[unique_item_key].url = "https://www.youtube.com/watch?v=" + line;
+            ui->listVideoQueue->addItem(item);
             ++unique_item_key;
         }
 
-        if(youtube_dl->isOpen())
-            youtube_dl->waitForReadyRead();
+        if(get_title->isOpen())
+            get_title->waitForReadyRead();
 
         is_title = !is_title;
         line = stream.readLine();
     }
 }
 
+void MainWindow::autostart_download(const QModelIndex&, int, int)
+{
+    if (ui->listVideoQueue->count() == 1 && settings->auto_download() && download_progress==0)
+        download_top_video();
+}
+
 void MainWindow::add_video_to_download_list(QString url, uint format)
 {
     QListWidgetItem *item = new QListWidgetItem(url);
 
-    item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
+    if(!url.contains("youtube.com/playlist"))
+    {
+        item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
 
-    queue_items[unique_item_key].url = url;
-    queue_items[unique_item_key].title = url;
-    queue_items[unique_item_key].format = format;
+        queue_items[unique_item_key].url = url;
+        queue_items[unique_item_key].title = url;
+        queue_items[unique_item_key].format = format;
 
-    create_item_title_from_its_data(item);
-    ui->listVideoQueue->addItem(item);
+        create_item_title_from_its_data(item);
+        ui->listVideoQueue->addItem(item);
+    }
 
-//    emit begin_name_resolving(unique_item_key,url); // Begin name resolving!
     QtConcurrent::run(this, &MainWindow::resolve_title, unique_item_key, url);
 
     ++unique_item_key;
-
-    if (settings->auto_download() && download_progress==0) download_top_video();
 }
 
 void MainWindow::refresh_filelist() // stores a list of filenames from the download path, in correct order, but doesn't show anything.
