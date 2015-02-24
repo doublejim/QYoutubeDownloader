@@ -444,8 +444,6 @@ void MainWindow::resolve_title(uint item_key, QString url)
                 ui->listVideoQueue->update();
                 return;
             }
-
-
         }
     }
     catch(int e)
@@ -518,13 +516,7 @@ void MainWindow::refresh_filelist() // stores a list of filenames from the downl
     if (dir.exists()==false) return;
 
     QStringList filters;
-    filters << "*.mp4";
-    filters << "*.m4a";
-    filters << "*.mp3";
-    filters << "*.ogg";
-    filters << "*.flv";
-    filters << "*.webm";
-    filters << "*.mkv";
+    filters << "*.mp4" << "*.m4a" << "*.mp3" << "*.ogg" << "*.flv" << "*.webm" << "*.mkv";
     ui->listVideos->clear();
     complete_filelist.clear();
 
@@ -695,17 +687,18 @@ void MainWindow::delete_file_from_disk()
     if (ui->listVideos->currentRow()==-1) return;
 
     QMessageBox message;
-    if (message.question(this, "Delete the file?", "Are you sure you want to delete the\nselected file from disk?",
+    if (message.question(this, "Confirm File Delete", "Are you sure you want to delete the\nselected file from disk?",
                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No)==QMessageBox::Yes)
     {
-        fix_download_path();
         QListWidgetItem* item = ui->listVideos->currentItem();
-        QFile file (ui->editDownloadPath->text() + item->text());
+        QString item_text = item->text();
+        fix_download_path(); // <- possibly deselects the current item - that's why it's right there.
+        QFile file (ui->editDownloadPath->text() + item_text);
 
         if (file.remove())
         {
             QMessageBox response;
-            response.setText("Deleted.");
+            response.setText("The file was deleted.");
             response.exec();
             refresh_filelist();
             refresh_filelist_filtering();
