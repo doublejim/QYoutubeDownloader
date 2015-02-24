@@ -419,7 +419,7 @@ void MainWindow::resolve_title(int item_key, QString url)
         get_title.start(program, arguments);
         get_title.waitForReadyRead();
 
-        if(url.contains("youtube.com/playlist"))
+        if(url.contains("youtube.com/playlist") || url.contains("youtube.com/user") || url.contains("youtube.com/channel"))
         {
             resolve_playlist_titles(&get_title, (int)item_key);
             get_title.close();
@@ -493,7 +493,7 @@ void MainWindow::add_video_to_download_list(QString url, int format)
 {
     QListWidgetItem *item = new QListWidgetItem(url);
 
-    if(!url.contains("youtube.com/playlist"))
+    if(!url.contains("youtube.com/playlist") && !url.contains("youtube.com/user") && !url.contains("youtube.com/channel"))
     {
         item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
 
