@@ -12,7 +12,7 @@ public:
     QString url = "";
     ushort format = 0;
 
-    uint setFormat(uint i);
+    int setFormat(int i);
     QString setTitle(QString& newtitle);
     void toggleFormat();
 };

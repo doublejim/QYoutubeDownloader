@@ -17,7 +17,7 @@ void Settings::load()
     size_ = settings_->value("MainWindow/size", QSize(400, 400)).toSize();
     position_ = settings_->value("MainWindow/position", QPoint(200, 200)).toPoint();
 
-    stacked_widget_active_page_ = settings_->value("Main/StackedWidgetActivePage").toUInt();
+    stacked_widget_active_page_ = settings_->value("Main/StackedWidgetActivePage").toInt();
     download_path_ = settings_->value("Main/DownloadPath").toString();
     expand_status_and_settings_ = settings_->value("Main/ExpandStatusAndSettings").toBool();
     last_search_ = settings_->value("Main/LastSearch").toString();
@@ -110,12 +110,12 @@ void Settings::setExpand_status_and_settings(bool expand_status_and_settings)
     settings_->setValue("Main/ExpandStatusAndSettings", expand_status_and_settings);
 }
 
-uint Settings::stacked_widget_active_page() const
+int Settings::stacked_widget_active_page() const
 {
     return stacked_widget_active_page_;
 }
 
-void Settings::setStacked_widget_active_page(uint stacked_widget_active_page)
+void Settings::setStacked_widget_active_page(int stacked_widget_active_page)
 {
     stacked_widget_active_page_ = stacked_widget_active_page;
     settings_->setValue("Main/StackedWidgetActivePage", stacked_widget_active_page);

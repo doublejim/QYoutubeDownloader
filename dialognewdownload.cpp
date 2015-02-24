@@ -13,7 +13,7 @@ DialogNewDownload::~DialogNewDownload()
     delete ui;
 }
 
-void DialogNewDownload::load(QString url, ushort format_to_download)
+void DialogNewDownload::load(QString url, int format_to_download)
 {
     ui->editUserInput->setText(url);
     if (format_to_download==0)

@@ -1,6 +1,6 @@
 #include "queueitem.h"
 
-uint QueueItem::setFormat(uint i)
+int QueueItem::setFormat(int i)
 {
     format = i;
     return format;

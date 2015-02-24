@@ -36,11 +36,11 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QApplication *qapp, QWidget *parent = 0);
     ~MainWindow();
-    void add_video_to_download_list(QString url, uint format = 0);
+    void add_video_to_download_list(QString url, int format = 0);
     Settings *settings;
     void apply_settings();
     bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
-    uint default_format();
+    int default_format();
 
 private slots:
     void check_download_path();
@@ -85,15 +85,15 @@ private:
     void save_settings();
     void restore_settings();
     void play_video(QString file);
-    void resolve_title(uint item_key, QString url);
+    void resolve_title(int item_key, QString url);
     void resolve_playlist_titles(QProcess * youtube_dl, int item_that_is_playlist);
 
-    QMap <uint,QueueItem> queue_items; // item data map.
+    QMap <int,QueueItem> queue_items; // item data map.
     QProcess* youtube_dl = NULL;
 
-    ushort download_progress = 0;
+    int download_progress = 0;
     QStringList complete_filelist;
-    unsigned int unique_item_key = 0;
+    int unique_item_key = 0;
     bool going_to_play_video = false;
     QString last_youtubedl_output;
     QString last_audio_destination;
