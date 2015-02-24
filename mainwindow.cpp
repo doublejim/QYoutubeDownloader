@@ -421,7 +421,7 @@ void MainWindow::resolve_title(int item_key, QString url)
 
         if(url.contains("youtube.com/playlist") || url.contains("youtube.com/user") || url.contains("youtube.com/channel"))
         {
-            resolve_playlist_titles(&get_title, (int)item_key);
+            resolve_playlist_titles(&get_title);
             get_title.close();
             return;
         }
@@ -450,7 +450,7 @@ void MainWindow::resolve_title(int item_key, QString url)
     {}
 }
 
-void MainWindow::resolve_playlist_titles(QProcess *get_title, int item_that_is_playlist)
+void MainWindow::resolve_playlist_titles(QProcess *get_title)
 {
     QTextStream stream(get_title);
     bool is_title = true;
