@@ -59,6 +59,7 @@ void MainWindow::restore_settings()
     ui->checkOpenInPlayerAfterDownload->setChecked(settings->open_in_player_after_download());
     ui->checkAutoDownload->setChecked(settings->auto_download());
     ui->stackedQueueInfoOptions->setCurrentIndex(settings->stacked_widget_active_page());
+    ui->checkExitWhenFinshed->setChecked(settings->exit_when_finshed());
 
     if (settings->expand_status_and_settings())
         ui->stackedQueueInfoOptions->show();
@@ -114,6 +115,7 @@ void MainWindow::save_settings()
     settings->setCombo_sort_type(ui->comboSortType->currentIndex());
     settings->setAuto_download(ui->checkAutoDownload->isChecked());
     settings->setStacked_widget_active_page(ui->stackedQueueInfoOptions->currentIndex());
+    settings->setExit_when_finshed(ui->checkExitWhenFinshed->isChecked());
 
     // it doesn't yet save the download queue.
 }
@@ -581,6 +583,8 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
     ui->labelVideo->hide();
     ui->labelAudio->hide();
     ui->btnStartDownload->setText("Start downloading");
+    if(ui->checkExitWhenFinshed->isChecked() && ui->listVideoQueue->count() == 0)
+        qApp->quit();
 }
 
 void MainWindow::on_btnStartDownload_clicked() // start downloading

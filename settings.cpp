@@ -23,6 +23,7 @@ void Settings::load()
     last_search_ = settings_->value("Main/LastSearch").toString();
     combo_sort_type_ = settings_->value("Main/comboSortType").toInt();
     open_in_player_after_download_ = settings_->value("Main/OpenInPlayerAfterDownload").toBool();
+    exit_when_finshed_ = settings_->value("Main/ExitWhenFinished").toBool();
     auto_download_ = settings_->value("Main/AutoDownload").toBool();
 
     hide_status_button_ = settings_->value("Settings/HideStatusButton").toBool();
@@ -139,6 +140,16 @@ void Settings::setOpen_in_player_after_download(bool value)
 {
     open_in_player_after_download_ = value;
     settings_->setValue("Main/OpenInPlayerAfterDownload", value);
+}
+
+bool Settings::exit_when_finshed() const
+{
+    return exit_when_finshed_;
+}
+void Settings::setExit_when_finshed(bool exit_when_finshed)
+{
+    exit_when_finshed_ = exit_when_finshed;
+    settings_->setValue("Main/ExitWhenFinished", exit_when_finshed);
 }
 
 bool Settings::hide_status_button() const

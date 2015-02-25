@@ -68,6 +68,9 @@ public:
     QString ffmpeg_path() const;
     void setFfmpeg_path(const QString &ffmpeg_path);
 
+    bool exit_when_finshed() const;
+    void setExit_when_finshed(bool exit_when_finshed);
+
 private:
     QSettings *settings_;
     void load();
@@ -92,6 +95,7 @@ private:
     int stacked_widget_active_page_ = 0;
     int combo_sort_type_;
     bool open_in_player_after_download_ = false;
+    bool exit_when_finshed_ = false;
 
     // Settings window
     bool hide_status_button_ = false;
