@@ -61,6 +61,12 @@ void MainWindow::restore_settings()
     ui->stackedQueueInfoOptions->setCurrentIndex(settings->stacked_widget_active_page());
     ui->checkExitWhenFinshed->setChecked(settings->exit_when_finshed());
 
+    ui->actionStatusbar->setChecked(settings->show_statusbar());
+    if(settings->show_statusbar())
+        ui->statusBar->show();
+    else
+        ui->statusBar->hide();
+
     if (settings->expand_status_and_settings())
         ui->stackedQueueInfoOptions->show();
     else
@@ -213,6 +219,7 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
     switch (download_progress)
     {
         case 1: { // begynder at downloade video
+                ui->statusBar->showMessage("Initialising video download...");
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
                 {
@@ -229,6 +236,7 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 break;
                 }
         case 2: { // downloader video
+                ui->statusBar->showMessage("Downloading video: filename - ? MiB");
                 int i=newOutput.lastIndexOf("[download]"); // led efter teksten "[download]".
                 if (i!=-1)
                 {
@@ -242,12 +250,14 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 break;
                 }
         case 3: { // begynder at downloade audio
+                ui->statusBar->showMessage("Initialising audio download...");
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
                     ++download_progress;
                 break;
                 }
         case 4: { // downloader audio
+                ui->statusBar->showMessage("Downloading audio: filename - ? MiB");
                 int i=newOutput.lastIndexOf("[download]");
                 if (i!=-1)
                 {
@@ -553,6 +563,7 @@ void MainWindow::refresh_filelist_filtering() // filters the videos (without sea
 void MainWindow::downloading_ended(int a) // delete top video, download next top video. a is not used, but required by the signal.
 {
     if (download_progress!=5) return;
+    ui->statusBar->showMessage("Downloading finished.");
     if(ui->checkOpenInPlayerAfterDownload->isChecked())
     {
         int item_key = ui->listVideoQueue->item(0)->data(Qt::UserRole).toInt();
@@ -660,6 +671,15 @@ void MainWindow::on_actionAbout_triggered()
     AboutWindow about(this);
     about.setModal(false);
     about.exec();
+}
+
+void MainWindow::on_actionStatusbar_toggled(bool view_statusbar)
+{
+    settings->setShow_statusbar(view_statusbar);
+    if(view_statusbar)
+        ui->statusBar->show();
+    else
+        ui->statusBar->hide();
 }
 
 void MainWindow::customContextMenuRequested(QPoint pos)
