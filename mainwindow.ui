@@ -60,7 +60,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>6</number>
+           <number>3</number>
           </property>
           <item>
            <widget class="QPushButton" name="btnStartDownload">
@@ -136,10 +136,10 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout">
               <property name="spacing">
-               <number>3</number>
+               <number>1</number>
               </property>
               <property name="sizeConstraint">
-               <enum>QLayout::SetMaximumSize</enum>
+               <enum>QLayout::SetMinimumSize</enum>
               </property>
               <property name="leftMargin">
                <number>0</number>
