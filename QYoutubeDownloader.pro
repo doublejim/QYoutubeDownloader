@@ -21,7 +21,7 @@ linux {
 
 win32|win64 {
     DESTDIR = $$_PRO_FILE_PWD_\build
-    DLLDESTDIR = $$_PRO_FILE_PWD_\build
+    DLLDESTDIR = $$_PRO_FILE_PWD_\build\dll
     OBJECTS_DIR = $$_PRO_FILE_PWD_\build\tmp
     MOC_DIR = $$_PRO_FILE_PWD_\build\tmp
     RCC_DIR = $$_PRO_FILE_PWD_\build\rcc

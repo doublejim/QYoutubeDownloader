@@ -280,7 +280,7 @@ void MainWindow::check_download_path()
     else if (complete_filelist.size() == 0)
     {
         ui->listVideos->clear();
-        QListWidgetItem *item = new QListWidgetItem("[no mp4 files found...]");
+        QListWidgetItem *item = new QListWidgetItem("[no media files found...]");
         ui->listVideos->addItem(item);
         ui->listVideos->setStyleSheet("font: italic 8pt \"MS Shell Dlg 2\"");
     }
