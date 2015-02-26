@@ -71,6 +71,9 @@ public:
     bool exit_when_finshed() const;
     void setExit_when_finshed(bool exit_when_finshed);
 
+    bool show_statusbar() const;
+    void setShow_statusbar(bool show_statusbar);
+
 private:
     QSettings *settings_;
     void load();
@@ -106,6 +109,10 @@ private:
     QString output_template_;
     QString youtube_dl_executable_;
     QString ffmpeg_path_;
+
+
+    //Menu
+    bool show_statusbar_ = false;
 };
 
 #endif // SETTINGS_H

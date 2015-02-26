@@ -65,6 +65,7 @@ private slots:
     void on_actionSettings_Menu_triggered();
     void on_actionQuit_triggered();
     void on_actionAbout_triggered();
+    void on_actionStatusbar_toggled(bool view_statusbar);
     void customContextMenuRequested(QPoint);
     void toggle_download_format();
     void on_listVideoQueue_doubleClicked();

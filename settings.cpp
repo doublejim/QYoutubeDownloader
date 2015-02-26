@@ -34,6 +34,7 @@ void Settings::load()
     output_template_ = settings_->value("Settings/OutputTemplate").toString();
     youtube_dl_executable_ = settings_->value("Settings/Youtube-dlExecutable").toString();
     ffmpeg_path_ = settings_->value("Settings/FFMPEGPath").toString();
+    show_statusbar_ = settings_->value("Menu/ShowStatusBar").toBool();
     defaults();
 }
 
@@ -247,4 +248,14 @@ void Settings::setFfmpeg_path(const QString &ffmpeg_path)
         defaults();
     else
         settings_->setValue("Settings/FFMPEGPath", ffmpeg_path);
+}
+
+bool Settings::show_statusbar() const
+{
+    return show_statusbar_;
+}
+void Settings::setShow_statusbar(bool show_statusbar)
+{
+    show_statusbar_ = show_statusbar;
+    settings_->setValue("Menu/ShowStatusBar", show_statusbar);
 }
