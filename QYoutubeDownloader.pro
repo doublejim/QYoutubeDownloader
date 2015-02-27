@@ -39,7 +39,8 @@ SOURCES += main.cpp\
     queueitem.cpp \
     settings.cpp \
     sharedmemory.cpp \
-    aboutwindow.cpp
+    aboutwindow.cpp \
+    osd.cpp
 
 HEADERS  += mainwindow.h \
     dialognewdownload.h \
@@ -47,9 +48,11 @@ HEADERS  += mainwindow.h \
     queueitem.h \
     settings.h \
     sharedmemory.h \
-    aboutwindow.h
+    aboutwindow.h \
+    osd.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \
     settingswindow.ui \
-    aboutwindow.ui
+    aboutwindow.ui \
+    osd.ui

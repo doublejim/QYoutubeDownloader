@@ -74,6 +74,18 @@ public:
     bool show_statusbar() const;
     void setShow_statusbar(bool show_statusbar);
 
+    QPoint osd_position() const;
+    void setOsd_position(const QPoint &osd_position);
+
+    QSize osd_size() const;
+    void setOsd_size(const QSize &osd_size);
+
+    bool osd_hide_decoration() const;
+    void setOsd_hide_decoration(bool osd_hide_decoration);
+
+    bool show_osd() const;
+    void setShow_osd(bool show_osd);
+
 private:
     QSettings *settings_;
     void load();
@@ -110,9 +122,15 @@ private:
     QString youtube_dl_executable_;
     QString ffmpeg_path_;
 
-
     //Menu
     bool show_statusbar_ = false;
+
+    //OSD
+    bool show_osd_ = false;
+    QSize osd_size_;
+    QPoint osd_position_;
+    bool osd_hide_decoration_ = false;
+
 };
 
 #endif // SETTINGS_H

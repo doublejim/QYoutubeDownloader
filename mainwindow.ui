@@ -406,6 +406,8 @@
       <string>Show</string>
      </property>
      <addaction name="actionStatusbar"/>
+     <addaction name="separator"/>
+     <addaction name="actionOSD"/>
     </widget>
     <addaction name="menuShow"/>
    </widget>
@@ -448,6 +450,14 @@
    </property>
    <property name="text">
     <string>Statusbar</string>
+   </property>
+  </action>
+  <action name="actionOSD">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>OSD</string>
    </property>
   </action>
  </widget>

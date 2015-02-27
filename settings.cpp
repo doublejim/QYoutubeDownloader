@@ -35,6 +35,11 @@ void Settings::load()
     youtube_dl_executable_ = settings_->value("Settings/Youtube-dlExecutable").toString();
     ffmpeg_path_ = settings_->value("Settings/FFMPEGPath").toString();
     show_statusbar_ = settings_->value("Menu/ShowStatusBar").toBool();
+
+    show_osd_ = settings_->value("OSD/Show").toBool();
+    osd_size_ = settings_->value("OSD/Size").toSize();
+    osd_position_ = settings_->value("OSD/Position").toPoint();
+    osd_hide_decoration_ = settings_->value("OSD/HideDecoration").toBool();
     defaults();
 }
 
@@ -61,6 +66,50 @@ void Settings::defaults()
     }
 
 }
+bool Settings::show_osd() const
+{
+    return show_osd_;
+}
+
+void Settings::setShow_osd(bool show_osd)
+{
+    show_osd_ = show_osd;
+    settings_->setValue("OSD/Show", show_osd);
+}
+
+bool Settings::osd_hide_decoration() const
+{
+    return osd_hide_decoration_;
+}
+
+void Settings::setOsd_hide_decoration(bool osd_hide_decoration)
+{
+    osd_hide_decoration_ = osd_hide_decoration;
+    settings_->setValue("OSD/HideDecoration", osd_hide_decoration);
+}
+
+QSize Settings::osd_size() const
+{
+    return osd_size_;
+}
+
+void Settings::setOsd_size(const QSize &osd_size)
+{
+    osd_size_ = osd_size;
+    settings_->setValue("OSD/Size", osd_size);
+}
+
+QPoint Settings::osd_position() const
+{
+    return osd_position_;
+}
+
+void Settings::setOsd_position(const QPoint &osd_position)
+{
+    osd_position_ = osd_position;
+    settings_->setValue("OSD/Position", osd_position);
+}
+
 
 QSize Settings::size() const
 {

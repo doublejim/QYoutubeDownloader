@@ -29,5 +29,8 @@
     <qresource prefix="/qdarkstyle">
         <file>style.qss</file>
     </qresource>
-    <qresource prefix="/"/>
+    <qresource prefix="/">
+        <file>../../../../usr/share/icons/oxygen/32x32/actions/dialog-cancel.png</file>
+        <file>rc/dialog-cancel.png</file>
+    </qresource>
 </RCC>

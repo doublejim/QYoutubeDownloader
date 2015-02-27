@@ -21,6 +21,7 @@
 #include "queueitem.h"
 #include "dialognewdownload.h"
 #include "aboutwindow.h"
+#include "osd.h"
 
 using namespace std;
 
@@ -41,6 +42,7 @@ public:
     void apply_settings();
     bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
     int default_format();
+    void cancel_download();
 
 private slots:
     void check_download_path();
@@ -66,6 +68,7 @@ private slots:
     void on_actionQuit_triggered();
     void on_actionAbout_triggered();
     void on_actionStatusbar_toggled(bool view_statusbar);
+    void on_actionOSD_toggled(bool show_osd);
     void customContextMenuRequested(QPoint);
     void toggle_download_format();
     void on_listVideoQueue_doubleClicked();
@@ -81,6 +84,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QApplication *qapp_;
+    OSD *osd_;
 
     void init_color_scheme();
     void save_settings();

@@ -6,7 +6,8 @@
 MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     qapp_(qapp),
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    osd_(new OSD(*this))
 {
     ui->setupUi(this);
 
@@ -60,6 +61,7 @@ void MainWindow::restore_settings()
     ui->checkAutoDownload->setChecked(settings->auto_download());
     ui->stackedQueueInfoOptions->setCurrentIndex(settings->stacked_widget_active_page());
     ui->checkExitWhenFinshed->setChecked(settings->exit_when_finshed());
+    ui->actionOSD->setChecked((settings->show_osd()));
 
     ui->actionStatusbar->setChecked(settings->show_statusbar());
     if(settings->show_statusbar())
@@ -100,6 +102,15 @@ int MainWindow::default_format()
         return 0;
     else
         return 1;
+}
+
+void MainWindow::cancel_download()
+{
+    ui->btnStartDownload->click();
+    QListWidgetItem *item = ui->listVideoQueue->item(0);
+    int item_key = item->data(Qt::UserRole).toInt();
+    delete item;
+    queue_items.remove(item_key);
 }
 
 void MainWindow::save_settings()
@@ -271,6 +282,8 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 break;
                 }
     }
+    if(settings->show_osd())
+        osd_->update_progressbars(ui->progressAudio->value(), ui->progressVideo->value());
     last_youtubedl_output = newOutput;
 }
 
@@ -349,6 +362,11 @@ void MainWindow::download_top_video()
     ui->progressAudio->show();
     ui->labelAudio->show();
     ui->btnStartDownload->setText("Pause");
+    if(settings->show_osd())
+    {
+        if(!ui->listVideoQueue->hasFocus() && !ui->btnAddVideoToQueue->hasFocus()) //TODO: Fix this line, its wrong
+            osd_->show("Downloading...");
+    }
     ++download_progress;
     youtube_dl->start(program,arguments);
 }
@@ -563,6 +581,8 @@ void MainWindow::refresh_filelist_filtering() // filters the videos (without sea
 void MainWindow::downloading_ended(int a) // delete top video, download next top video. a is not used, but required by the signal.
 {
     if (download_progress!=5) return;
+    if(settings->show_osd())
+        osd_->hide();
     ui->statusBar->showMessage("Downloading finished.");
     if(ui->checkOpenInPlayerAfterDownload->isChecked())
     {
@@ -680,6 +700,12 @@ void MainWindow::on_actionStatusbar_toggled(bool view_statusbar)
         ui->statusBar->show();
     else
         ui->statusBar->hide();
+}
+
+void MainWindow::on_actionOSD_toggled(bool show_osd)
+
+{
+    settings->setShow_osd(show_osd);
 }
 
 void MainWindow::customContextMenuRequested(QPoint pos)
