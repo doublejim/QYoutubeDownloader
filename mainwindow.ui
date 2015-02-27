@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>771</width>
-    <height>558</height>
+    <height>574</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,10 +60,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>6</number>
-          </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
+           <number>3</number>
           </property>
           <item>
            <widget class="QPushButton" name="btnStartDownload">
@@ -139,10 +136,10 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout">
               <property name="spacing">
-               <number>3</number>
+               <number>1</number>
               </property>
               <property name="sizeConstraint">
-               <enum>QLayout::SetMaximumSize</enum>
+               <enum>QLayout::SetMinimumSize</enum>
               </property>
               <property name="leftMargin">
                <number>0</number>
@@ -180,7 +177,7 @@
               <item>
                <widget class="QCheckBox" name="checkExitWhenFinshed">
                 <property name="text">
-                 <string>Exit when finished downloading</string>
+                 <string>Exit when finished downloading.</string>
                 </property>
                </widget>
               </item>
@@ -290,7 +287,7 @@
           <item>
            <widget class="QLabel" name="labelAllVideos">
             <property name="text">
-             <string>All videos in folder:</string>
+             <string>In current folder:</string>
             </property>
            </widget>
           </item>
@@ -369,7 +366,7 @@
      <x>0</x>
      <y>0</y>
      <width>771</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="defaultUp">
