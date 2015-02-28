@@ -29,6 +29,7 @@ public slots:
 private:
     Ui::OSD *ui;
     MainWindow& main_window;
+    bool eventFilter(QObject *obj, QEvent *event);
 };
 
 #endif // OSD_H

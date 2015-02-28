@@ -11,6 +11,11 @@ OSD::OSD(MainWindow &main_window, QWidget *parent) :
 //    this->setWindowFlags(Qt::Popup);
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
+    ui->progressAudio->installEventFilter(this);
+    ui->progressVideo->installEventFilter(this);
+    ui->labelAudio->installEventFilter(this);
+    ui->labelVideo->installEventFilter(this);
+    this->installEventFilter(this);
 }
 
 void OSD::update_progressbars(int audio, int video)
@@ -65,4 +70,17 @@ void OSD::toggle_window_border()
     this->setWindowFlags(Qt::Dialog);
     main_window.settings->setOsd_hide_decoration(!main_window.settings->osd_hide_decoration());
     show(this->windowTitle());
+}
+
+bool OSD::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::MouseButtonPress)
+    {
+        this->hide();
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

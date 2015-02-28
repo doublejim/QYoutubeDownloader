@@ -700,10 +700,10 @@ void MainWindow::on_actionStatusbar_toggled(bool view_statusbar)
         ui->statusBar->show();
     else
         ui->statusBar->hide();
+    this->repaint();
 }
 
 void MainWindow::on_actionOSD_toggled(bool show_osd)
-
 {
     settings->setShow_osd(show_osd);
 }
