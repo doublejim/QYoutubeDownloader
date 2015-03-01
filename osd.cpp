@@ -24,18 +24,19 @@ void OSD::update_progressbars(int audio, int video)
     ui->progressVideo->setValue(video);
 }
 
-void OSD::show(const QString& title)
+void OSD::showOSD(const QString& title)
 {
     Qt::WindowFlags flags = Qt::Dialog;
-    this->move(main_window.settings->osd_position());
-    this->resize(main_window.settings->osd_size());
     if(main_window.settings->osd_hide_decoration())
     {
-        this->setWindowFlags(flags |= Qt::FramelessWindowHint);
+        flags |= Qt::FramelessWindowHint;
     }
     flags |= Qt::WindowStaysOnTopHint;
     this->setWindowTitle(title);
-    QDialog::show();
+    this->setWindowFlags(flags);
+    this->move(main_window.settings->osd_position()); // I simple do not understand, why this doesn't work when toggling window border
+    this->resize(main_window.settings->osd_size());
+    this->show();
 }
 
 OSD::~OSD()
@@ -67,14 +68,13 @@ void OSD::save_position()
 void OSD::toggle_window_border()
 {
     save_position();
-    this->setWindowFlags(Qt::Dialog);
     main_window.settings->setOsd_hide_decoration(!main_window.settings->osd_hide_decoration());
-    show(this->windowTitle());
+    showOSD(this->windowTitle());
 }
 
 bool OSD::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::MouseButtonPress)
+    if (event->type() == QEvent::MouseButtonDblClick)
     {
         this->hide();
         return true;

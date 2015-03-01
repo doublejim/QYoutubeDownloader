@@ -17,7 +17,7 @@ class OSD: public QDialog
 public:
     explicit OSD(MainWindow& main_window, QWidget *parent = 0);
     void update_progressbars(int audio, int video);
-    void show(const QString &title);
+    void showOSD(const QString &title);
 
     ~OSD();
 public slots:

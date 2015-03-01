@@ -39,6 +39,7 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    osd_->close();
     if(!do_not_save_settings)
     {
         save_settings();
@@ -365,7 +366,7 @@ void MainWindow::download_top_video()
     if(settings->show_osd())
     {
         if(!ui->listVideoQueue->hasFocus() && !ui->btnAddVideoToQueue->hasFocus()) //TODO: Fix this line, its wrong
-            osd_->show("Downloading...");
+            osd_->showOSD("Downloading...");
     }
     ++download_progress;
     youtube_dl->start(program,arguments);
@@ -419,6 +420,7 @@ void MainWindow::delete_selected_item_on_queue()
 
 void MainWindow::stop_downloading()
 {
+    osd_->hide();
     youtube_dl->close();
     ui->btnStartDownload->setText("Resume");
     download_progress=0;
