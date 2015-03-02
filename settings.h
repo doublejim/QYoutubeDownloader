@@ -86,6 +86,12 @@ public:
     bool show_osd() const;
     void setShow_osd(bool show_osd);
 
+    bool save_to_subdir() const;
+    void setSave_to_subdir(bool save_to_subdir);
+
+    int combo_subdir_pattern() const;
+    void setCombo_subdir_pattern(int combo_subdir_pattern);
+
 private:
     QSettings *settings_;
     void load();
@@ -111,6 +117,8 @@ private:
     int combo_sort_type_;
     bool open_in_player_after_download_ = false;
     bool exit_when_finshed_ = false;
+    bool save_to_subdir_ = false;
+    int combo_subdir_pattern_ = 0;
 
     // Settings window
     bool hide_status_button_ = false;

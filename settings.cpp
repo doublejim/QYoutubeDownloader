@@ -25,6 +25,8 @@ void Settings::load()
     open_in_player_after_download_ = settings_->value("Main/OpenInPlayerAfterDownload").toBool();
     exit_when_finshed_ = settings_->value("Main/ExitWhenFinished").toBool();
     auto_download_ = settings_->value("Main/AutoDownload").toBool();
+    save_to_subdir_ = settings_->value("Main/SaveToSubdir").toBool();
+    combo_subdir_pattern_ = settings_->value("Main/SubdirPattern").toInt();
 
     hide_status_button_ = settings_->value("Settings/HideStatusButton").toBool();
     dark_style_ = settings_->value("Settings/DarkStyle").toBool();
@@ -66,6 +68,28 @@ void Settings::defaults()
     }
 
 }
+int Settings::combo_subdir_pattern() const
+{
+    return combo_subdir_pattern_;
+}
+
+void Settings::setCombo_subdir_pattern(int combo_subdir_pattern)
+{
+    combo_subdir_pattern_ = combo_subdir_pattern;
+    settings_->setValue("Main/SubdirPattern", combo_subdir_pattern);
+}
+
+bool Settings::save_to_subdir() const
+{
+    return save_to_subdir_;
+}
+
+void Settings::setSave_to_subdir(bool save_to_subdir)
+{
+    save_to_subdir_ = save_to_subdir;
+    settings_->setValue("Main/SaveToSubdir", save_to_subdir);
+}
+
 bool Settings::show_osd() const
 {
     return show_osd_;

@@ -16,6 +16,9 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     ui->labelVideo->hide();
     ui->labelAudio->hide();
 
+    ui->comboSubdirPattern->addItem("Uploader name", "%(uploader)s");
+    ui->comboSubdirPattern->addItem("Playlist title", "%(playlist)s");
+
     settings = new Settings(qApp->applicationDirPath());
     restore_settings();
 
@@ -63,6 +66,8 @@ void MainWindow::restore_settings()
     ui->stackedQueueInfoOptions->setCurrentIndex(settings->stacked_widget_active_page());
     ui->checkExitWhenFinshed->setChecked(settings->exit_when_finshed());
     ui->actionOSD->setChecked((settings->show_osd()));
+    ui->checkSaveToSubdir->setChecked(settings->save_to_subdir());
+    ui->comboSubdirPattern->setCurrentIndex(settings->combo_subdir_pattern());
 
     ui->actionStatusbar->setChecked(settings->show_statusbar());
     if(settings->show_statusbar())
@@ -121,6 +126,9 @@ void MainWindow::save_settings()
         settings->setSize(size());
         settings->setPosition(pos());
     }
+
+    settings->setSave_to_subdir(ui->checkSaveToSubdir->isChecked());
+    settings->setCombo_subdir_pattern(ui->comboSubdirPattern->currentIndex());
 
     settings->setOpen_in_player_after_download(ui->checkOpenInPlayerAfterDownload->isChecked());
     QDir dir (ui->editDownloadPath->text());
@@ -343,7 +351,15 @@ void MainWindow::download_top_video()
         default: format_to_download = "bestvideo+bestaudio"; break;
     }
 
-    arguments << "-o" << ui->editDownloadPath->text() + settings->output_template()
+    QString output_path = ui->editDownloadPath->text();
+    if (ui->checkSaveToSubdir->isChecked())
+    {
+        output_path += ui->comboSubdirPattern->currentData().toString() + "/";
+    }
+
+    output_path += settings->output_template();
+
+    arguments << "-o" << output_path
               << "-f" << format_to_download
               << "--ffmpeg-location" << settings->ffmpeg_path()
               << "--merge-output-format" << "mkv"
