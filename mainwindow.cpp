@@ -256,7 +256,6 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 break;
                 }
         case 2: { // downloader video
-                ui->statusBar->showMessage("Downloading video: filename - ? MiB");
                 int i=newOutput.lastIndexOf("[download]"); // led efter teksten "[download]".
                 if (i!=-1)
                 {
@@ -265,6 +264,9 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                     float value;
                     stream >> value; // gem tallet i value.
                     ui->progressVideo->setValue(value); // set progressbaren til den fundne værdi.
+                    QStringList first = newOutput.split(" of ");
+                    QStringList second = first[1].split(" at ");
+                    ui->statusBar->showMessage("Downloading video: " + second[0]);
                     if (value==100) ++download_progress;
                 }
                 break;
@@ -277,7 +279,6 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 break;
                 }
         case 4: { // downloader audio
-                ui->statusBar->showMessage("Downloading audio: filename - ? MiB");
                 int i=newOutput.lastIndexOf("[download]");
                 if (i!=-1)
                 {
@@ -286,6 +287,9 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                     float value;
                     stream >> value;
                     ui->progressAudio->setValue(value);
+                    QStringList first = newOutput.split(" of ");
+                    QStringList second = first[1].split(" at ");
+                    ui->statusBar->showMessage("Downloading audio: " + second[0]);
                     if (value==100) ++download_progress;
                 }
                 break;
