@@ -3,11 +3,12 @@
 
 //using namespace std;
 
-MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
-    qapp_(qapp),
+MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    osd_(new OSD(*this))
+    settings (QSettings::IniFormat, QSettings::UserScope, "QYoutubeDownloader", "config"),
+    settingsI (&settings),
+    osd_(new OSD(*this)),
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -19,10 +20,20 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
     ui->comboSubdirPattern->addItem("Uploader name", "%(uploader)s");
     ui->comboSubdirPattern->addItem("Playlist title", "%(playlist)s");
 
-    settings = new Settings(qApp->applicationDirPath());
-    restore_settings();
+    settingsI.join("Main/DownloadPath",ui->editDownloadPath, ".");
+    settingsI.join("Main/LastSearch",ui->editSearch);
+    settingsI.join("Main/comboSortType",ui->comboSortType);
+    settingsI.join("Main/OpenInPlayerAfterDownload",ui->checkOpenInPlayerAfterDownload);
+    settingsI.join("Main/ExitWhenFinished",ui->checkExitWhenFinshed);
+    settingsI.join("Main/SaveToSubdir",ui->checkSaveToSubdir);
+    settingsI.join("Main/SubdirPattern",ui->comboSubdirPattern);
+    settingsI.join("Main/AutoDownload",ui->checkAutoDownload);
 
-    if (ui->editDownloadPath->text()=="")  ui->editDownloadPath->setText(".");
+    apply_settings_at_startup();
+
+    // TODO: replace the OLD SIGNALS/SLOTS with the MODERN way of writing it:
+    // like this: connect(item_from, &MainWindow::function_from, item_to, &OtherWindow::function_to);
+    // then all connections are verified at compile-time!
 
     QShortcut* shortcut_del = new QShortcut(QKeySequence(Qt::Key_Delete),this);
     connect(shortcut_del, SIGNAL(activated()), this, SLOT(shortcut_delete()));
@@ -43,68 +54,102 @@ MainWindow::MainWindow(QApplication *qapp, QWidget *parent) :
 MainWindow::~MainWindow()
 {
     osd_->close();
+
     if(!do_not_save_settings)
     {
         save_settings();
-        delete settings; //sync() settings_
+        settingsI.saveSettingsFromGUI();
     }
+
     delete ui;
 }
 
-//Settings that should be applied on program start
-void MainWindow::restore_settings()
+void MainWindow::apply_settings_at_startup()
 {
-    if(settings->size() != QSize()) // size not set, let wm chose
-        resize(settings->size());
-    if(settings->position() != QPoint()) // pos not set, let wm chose
-        move(settings->position());
-    ui->editDownloadPath->setText(settings->download_path());
-    ui->editSearch->setText(settings->last_search());
-    ui->comboSortType->setCurrentIndex(settings->combo_sort_type());
-    ui->checkOpenInPlayerAfterDownload->setChecked(settings->open_in_player_after_download());
-    ui->checkAutoDownload->setChecked(settings->auto_download());
-    ui->stackedQueueInfoOptions->setCurrentIndex(settings->stacked_widget_active_page());
-    ui->checkExitWhenFinshed->setChecked(settings->exit_when_finshed());
-    ui->actionOSD->setChecked((settings->show_osd()));
-    ui->checkSaveToSubdir->setChecked(settings->save_to_subdir());
-    ui->comboSubdirPattern->setCurrentIndex(settings->combo_subdir_pattern());
+    if ( settings.value("MainWindow/size").toSize() != QSize() ) // size not set, let wm chose
+        resize( settings.value("MainWindow/size").toSize() );
+    if ( settings.value("MainWindow/position").toPoint() != QPoint() ) // pos not set, let wm chose
+        move( settings.value("MainWindow/position").toPoint() );
 
-    ui->actionStatusbar->setChecked(settings->show_statusbar());
-    if(settings->show_statusbar())
+    ui->stackedQueueInfoOptions->setCurrentIndex( settings.value("Main/StackedWidgetActivePage").toInt() );
+    ui->actionOSD->setChecked( settings.value("OSD/Show").toBool() );
+    ui->actionStatusbar->setChecked( settings.value("Menu/ShowStatusBar").toBool() );
+
+    if (settings.value("Menu/ShowStatusBar").toBool())
         ui->statusBar->show();
     else
         ui->statusBar->hide();
 
-    if (settings->expand_status_and_settings())
+    if (settings.value("Main/ExpandStatusAndSettings").toBool())
         ui->stackedQueueInfoOptions->show();
     else
         ui->stackedQueueInfoOptions->hide();
 
-    // it doesn't yet load the download queue.
-    apply_settings();
+    // defaults:
+    if (settings.value("Settings/Youtube-dlExecutable").toString()=="")
+        settings.setValue("Settings/Youtube-dlExecutable", qApp->applicationDirPath()+"/youtube-dl");
+    if (settings.value("Settings/FFMPEGPath").toString()=="")
+    {
+        #ifdef Q_OS_WIN
+        settings.setValue("Settings/FFMPEGPath", qApp->applicationDirPath()+"/ffmpeg.exe");
+        #else
+        settings.setValue("Settings/FFMPEGPath", qApp->applicationDirPath()+"/ffmpeg");
+        #endif
+    }
+    if (settings.value("Settings/OutputTemplate").toString()=="")
+        settings.setValue("Settings/OutputTemplate", "%(uploader)s - %(title)s.%(ext)s");
+
+    apply_settings_while_running();
 }
 
-// Settings that should be applied while program is running
-// This function is also called from the settings window, whenever ok or apply is pressed
-void MainWindow::apply_settings()
+// This function is called at startup and also from the settings window, whenever ok or apply is pressed.
+void MainWindow::apply_settings_while_running()
 {
-    if (settings->hide_status_button())
+    if (settings.value("Settings/HideStatusButton").toBool())
     {
         ui->btnShowStatus->hide();
         if (ui->stackedQueueInfoOptions->currentIndex()==0)
             ui->stackedQueueInfoOptions->setCurrentIndex(1);
     }
-    else
-    {
-        ui->btnShowStatus->show();
-    }
+    else ui->btnShowStatus->show();
 
     init_color_scheme();
 }
 
+void MainWindow::save_settings() // the settings that the QSettingsInterface can't take care of.
+{
+    if (!settings.value("Settings/DoNotSaveSizeAndPosition").toBool())
+    {
+        settings.setValue("MainWindow/size", size());
+        settings.setValue("MainWindow/position", pos());
+    }
+
+    settings.setValue("Main/ExpandStatusAndSettings", !ui->stackedQueueInfoOptions->isHidden() );
+    settings.setValue("Main/StackedWidgetActivePage", ui->stackedQueueInfoOptions->currentIndex());
+}
+
+void MainWindow::init_color_scheme()
+{
+    if (settings.value("Settings/DarkStyle").toBool())
+    {
+        QFile f(":qdarkstyle/style.qss");
+        if (!f.exists())
+        {
+            printf("Unable to set stylesheet, file not found\n");
+        }
+        else
+        {
+            f.open(QFile::ReadOnly | QFile::Text);
+            QTextStream ts(&f);
+            qApp->setStyleSheet(ts.readAll());
+        }
+    }
+    else qApp->setStyleSheet("fusion");
+}
+
 int MainWindow::default_format()
 {
-    if(ui->radioAudioVideo->isChecked())
+    if ( ui->radioAudioVideo->isChecked() )
         return 0;
     else
         return 1;
@@ -117,56 +162,6 @@ void MainWindow::cancel_download()
     int item_key = item->data(Qt::UserRole).toInt();
     delete item;
     queue_items.remove(item_key);
-}
-
-void MainWindow::save_settings()
-{
-    if(!settings->do_not_save_size_and_position())
-    {
-        settings->setSize(size());
-        settings->setPosition(pos());
-    }
-
-    settings->setSave_to_subdir(ui->checkSaveToSubdir->isChecked());
-    settings->setCombo_subdir_pattern(ui->comboSubdirPattern->currentIndex());
-
-    settings->setOpen_in_player_after_download(ui->checkOpenInPlayerAfterDownload->isChecked());
-    QDir dir (ui->editDownloadPath->text());
-
-    if (dir.exists())
-        settings->setDownload_path(dir.path());
-
-    settings->setExpand_status_and_settings(!ui->stackedQueueInfoOptions->isHidden());
-    settings->setLast_search(ui->editSearch->text());
-    settings->setCombo_sort_type(ui->comboSortType->currentIndex());
-    settings->setAuto_download(ui->checkAutoDownload->isChecked());
-    settings->setStacked_widget_active_page(ui->stackedQueueInfoOptions->currentIndex());
-    settings->setExit_when_finshed(ui->checkExitWhenFinshed->isChecked());
-
-    // it doesn't yet save the download queue.
-}
-
-
-void MainWindow::init_color_scheme()
-{
-    if(settings->dark_style())
-    {
-        QFile f(":qdarkstyle/style.qss");
-        if (!f.exists())
-        {
-            printf("Unable to set stylesheet, file not found\n");
-        }
-        else
-        {
-            f.open(QFile::ReadOnly | QFile::Text);
-            QTextStream ts(&f);
-            qapp_->setStyleSheet(ts.readAll());
-        }
-    }
-    else
-    {
-        qapp_->setStyleSheet("fusion");
-    }
 }
 
 void MainWindow::listVideoQueue_paste()
@@ -200,11 +195,11 @@ void MainWindow::open_video()
 
 void MainWindow::play_video(QString file)
 {
-    QString program = settings->media_player_path();
+    QString program = settings.value("Settings/MediaPlayer").toString();
     QStringList arguments;
 
-    if (settings->media_player_args() != "")
-        arguments << settings->media_player_args() << file;
+    if (settings.value("Settings/MediaPlayerArgs").toString() != "")
+        arguments << settings.value("Settings/MediaPlayerArgs").toString() << file;
     else
         arguments << file;
 
@@ -231,14 +226,14 @@ void MainWindow::select_directory()
 
 void MainWindow::refresh_interface() // Updates the progress bars and the text output from youtube-dl.
 {
-    QString newOutput = youtube_dl->readAllStandardOutput(); // nyt output fra youtube-dl
+    QString newOutput = youtube_dl->readAllStandardOutput(); // new output from youtube-dl.
 
-    ui->textDetails->setText(ui->textDetails->toPlainText()+newOutput); // tilføjer teksten til textedit.
-    ui->textDetails->verticalScrollBar()->setSliderPosition(ui->textDetails->verticalScrollBar()->maximum()); // sådan at den scroller ned automatisk.
+    ui->textDetails->setText(ui->textDetails->toPlainText()+newOutput); // adds text to textedit.
+    ui->textDetails->verticalScrollBar()->setSliderPosition(ui->textDetails->verticalScrollBar()->maximum()); // to scroll down automatically.
 
     switch (download_progress)
     {
-        case 1: { // begynder at downloade video
+        case 1: { // Starts downloading video.
                 ui->statusBar->showMessage("Initialising video download...");
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
@@ -255,15 +250,15 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 }
                 break;
                 }
-        case 2: { // downloader video
-                int i=newOutput.lastIndexOf("[download]"); // led efter teksten "[download]".
+        case 2: { // Downloading video
+                int i=newOutput.lastIndexOf("[download]"); // look for text: "[download]".
                 if (i!=-1)
                 {
                     QTextStream stream (&newOutput);
-                    stream.seek(i+10); // gå til tallet efter "[download]"-teksten.
+                    stream.seek(i+10); // go to the number after the "[download]"-text.
                     float value;
-                    stream >> value; // gem tallet i value.
-                    ui->progressVideo->setValue(value); // set progressbaren til den fundne værdi.
+                    stream >> value; // save the number.
+                    ui->progressVideo->setValue(value); // set progressbar to the found value.
                     QStringList first = newOutput.split(" of ");
                     QStringList second = first[1].split(" at ");
                     ui->statusBar->showMessage("Downloading video: " + second[0]);
@@ -271,14 +266,14 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 }
                 break;
                 }
-        case 3: { // begynder at downloade audio
+        case 3: { // Starts downloading audio.
                 ui->statusBar->showMessage("Initialising audio download...");
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
                     ++download_progress;
                 break;
                 }
-        case 4: { // downloader audio
+        case 4: { // Downloading audio.
                 int i=newOutput.lastIndexOf("[download]");
                 if (i!=-1)
                 {
@@ -295,7 +290,7 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 break;
                 }
     }
-    if(settings->show_osd())
+    if ( settings.value("OSD/Show").toBool() )
         osd_->update_progressbars(ui->progressAudio->value(), ui->progressVideo->value());
     last_youtubedl_output = newOutput;
 }
@@ -341,7 +336,7 @@ void MainWindow::download_top_video()
                                return; }
     fix_download_path(); // must happen AFTER the above check, because QDir::cleanPath causes a crash if the path is empty.
 
-    QString program = settings->youtube_dl_executable();
+    QString program = settings.value("Settings/Youtube-dlExecutable").toString();
     QStringList arguments;
 
     QListWidgetItem* current_item = ui->listVideoQueue->item(0);
@@ -361,11 +356,11 @@ void MainWindow::download_top_video()
         output_path += ui->comboSubdirPattern->currentData().toString() + "/";
     }
 
-    output_path += settings->output_template();
+    output_path += settings.value("Settings/OutputTemplate").toString();
 
     arguments << "-o" << output_path
               << "-f" << format_to_download
-              << "--ffmpeg-location" << settings->ffmpeg_path()
+              << "--ffmpeg-location" << settings.value("Settings/FFMPEGPath").toString()
               << "--merge-output-format" << "mkv"
               << queue_items[current_item_key].url;
 
@@ -383,7 +378,7 @@ void MainWindow::download_top_video()
     ui->progressAudio->show();
     ui->labelAudio->show();
     ui->btnStartDownload->setText("Pause");
-    if(settings->show_osd())
+    if(settings.value("OSD/Show").toBool())
     {
         if(!ui->listVideoQueue->hasFocus() && !ui->btnAddVideoToQueue->hasFocus()) //TODO: Fix this line, its wrong
             osd_->showOSD("Downloading...");
@@ -413,14 +408,14 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
         ui->listVideoQueue->addItem(item);
     }
 
-    if (settings->auto_download() && download_progress==0) download_top_video();
+    if (settings.value("Main/AutoDownload").toBool() && download_progress==0) download_top_video();
 }
 
 void MainWindow::delete_selected_item_on_queue()
 {
     if(ui->listVideoQueue->selectedItems().contains(ui->listVideoQueue->item(0)))
     {
-        if(youtube_dl != NULL)
+        if(youtube_dl != nullptr)
             youtube_dl->close();
         download_progress=0;
         ui->btnStartDownload->setText("Start downloading");
@@ -461,7 +456,7 @@ void MainWindow::resolve_title(int item_key, QString url)
 {
     try
     {
-        QString program = settings->youtube_dl_executable();
+        QString program = settings.value("Settings/Youtube-dlExecutable").toString();
 
         QStringList arguments;
         arguments << "-e" << "--get-id" << url;
@@ -537,7 +532,7 @@ void MainWindow::resolve_playlist_titles(QProcess *get_title)
 
 void MainWindow::autostart_download(const QModelIndex&, int, int)
 {
-    if (ui->listVideoQueue->count() == 1 && settings->auto_download() && download_progress==0)
+    if (ui->listVideoQueue->count() == 1 && settings.value("Main/AutoDownload").toBool() && download_progress==0)
         download_top_video();
 }
 
@@ -603,7 +598,7 @@ void MainWindow::refresh_filelist_filtering() // filters the videos (without sea
 void MainWindow::downloading_ended(int a) // delete top video, download next top video. a is not used, but required by the signal.
 {
     if (download_progress!=5) return;
-    if(settings->show_osd())
+    if (settings.value("OSD/Show").toBool())
         osd_->hide();
     ui->statusBar->showMessage("Downloading finished.");
     if(ui->checkOpenInPlayerAfterDownload->isChecked())
@@ -698,14 +693,14 @@ void MainWindow::on_comboSortType_currentIndexChanged(int a) // new type of sort
 
 void MainWindow::on_actionSettings_Menu_triggered()
 {
-    SettingsWindow window(this);
-    window.setModal(false);
+    SettingsWindow window(*this);
+    window.setModal(true);
     window.exec();
 }
 
 void MainWindow::on_actionQuit_triggered()
 {
-    qapp_->quit();
+    qApp->quit();
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -717,7 +712,8 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionStatusbar_toggled(bool view_statusbar)
 {
-    settings->setShow_statusbar(view_statusbar);
+    settings.setValue("Menu/ShowStatusBar",view_statusbar);
+
     if(view_statusbar)
         ui->statusBar->show();
     else
@@ -727,7 +723,7 @@ void MainWindow::on_actionStatusbar_toggled(bool view_statusbar)
 
 void MainWindow::on_actionOSD_toggled(bool show_osd)
 {
-    settings->setShow_osd(show_osd);
+    settings.setValue("OSD/Show",show_osd);
 }
 
 void MainWindow::customContextMenuRequested(QPoint pos)
@@ -759,7 +755,7 @@ void MainWindow::delete_file_from_disk()
     if (ui->listVideos->currentRow()==-1) return;
 
     QMessageBox message;
-    if (message.question(this, "Confirm File Delete", "Are you sure you want to delete the\nselected file from disk?",
+    if (message.question(this, "Confirm File Delete", "Are you sure you want to delete\n"+ui->listVideos->currentItem()->text()+"\nfrom disk?",
                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No)==QMessageBox::Yes)
     {
         QListWidgetItem* item = ui->listVideos->currentItem();
@@ -804,7 +800,6 @@ void MainWindow::on_btnShowStatus_clicked()
     if (ui->stackedQueueInfoOptions->isHidden())
         ui->stackedQueueInfoOptions->show();
     else ui->stackedQueueInfoOptions->hide();
-
 }
 
 void MainWindow::on_btnShowOptions_clicked()
@@ -819,10 +814,9 @@ void MainWindow::on_btnShowOptions_clicked()
     if (ui->stackedQueueInfoOptions->isHidden())
         ui->stackedQueueInfoOptions->show();
     else ui->stackedQueueInfoOptions->hide();
-
 }
 
 void MainWindow::on_checkAutoDownload_clicked()
 {
-    settings->setAuto_download(ui->checkAutoDownload->isChecked());
+    settings.setValue("Main/AutoDownload",ui->checkAutoDownload->isChecked());
 }

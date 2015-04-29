@@ -17,7 +17,7 @@
 #include <QFile>
 
 #include "settingswindow.h"
-#include "settings.h"
+#include "qsettingsinterface.h"
 #include "queueitem.h"
 #include "dialognewdownload.h"
 #include "aboutwindow.h"
@@ -35,14 +35,16 @@ class MainWindow : public QMainWindow
     QThread NameResolvingThread;
 
 public:
-    explicit MainWindow(QApplication *qapp, QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void add_video_to_download_list(QString url, int format = 0);
-    Settings *settings;
-    void apply_settings();
+    QSettings settings;
+    QSettingsInterface settingsI;
+
     bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
     int default_format();
     void cancel_download();
+    void apply_settings_while_running();
 
 private slots:
     void check_download_path();
@@ -80,21 +82,19 @@ private slots:
     void shortcut_delete();
     void autostart_download(const QModelIndex&, int, int);
 
-
 private:
-    Ui::MainWindow *ui;
-    QApplication *qapp_;
     OSD *osd_;
 
     void init_color_scheme();
     void save_settings();
-    void restore_settings();
+    void apply_settings_at_startup();
+
     void play_video(QString file);
     void resolve_title(int item_key, QString url);
     void resolve_playlist_titles(QProcess * youtube_dl);
 
     QMap <int,QueueItem> queue_items; // item data map.
-    QProcess* youtube_dl = NULL;
+    QProcess* youtube_dl = nullptr;
 
     int download_progress = 0;
     QStringList complete_filelist;
@@ -102,6 +102,8 @@ private:
     bool going_to_play_video = false;
     QString last_youtubedl_output;
     QString last_audio_destination;
+
+    Ui::MainWindow *ui;
 };
 
 #endif // MAINWINDOW_H

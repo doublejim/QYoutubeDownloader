@@ -13,10 +13,10 @@ TEMPLATE = app
 
     DESTDIR = $$_PRO_FILE_PWD_/build
     DLLDESTDIR = $$_PRO_FILE_PWD_/build/dll
-    OBJECTS_DIR = $$_PRO_FILE_PWD_/build/.tmp
-    MOC_DIR = $$_PRO_FILE_PWD_/build/.tmp
-    RCC_DIR = $$_PRO_FILE_PWD_/build/.rcc
-    UI_DIR = $$_PRO_FILE_PWD_/build/.ui
+    OBJECTS_DIR = $$_PRO_FILE_PWD_/build/tmp
+    MOC_DIR = $$_PRO_FILE_PWD_/build/tmp
+    RCC_DIR = $$_PRO_FILE_PWD_/build/rcc
+    UI_DIR = $$_PRO_FILE_PWD_/build/ui
 
 CONFIG += c++11
 
@@ -27,19 +27,19 @@ SOURCES += main.cpp\
     dialognewdownload.cpp \
     settingswindow.cpp \
     queueitem.cpp \
-    settings.cpp \
     sharedmemory.cpp \
     aboutwindow.cpp \
-    osd.cpp
+    osd.cpp \
+    qsettingsinterface.cpp
 
 HEADERS  += mainwindow.h \
     dialognewdownload.h \
     settingswindow.h \
     queueitem.h \
-    settings.h \
     sharedmemory.h \
     aboutwindow.h \
-    osd.h
+    osd.h \
+    qsettingsinterface.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \

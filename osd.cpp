@@ -27,15 +27,15 @@ void OSD::update_progressbars(int audio, int video)
 void OSD::showOSD(const QString& title)
 {
     Qt::WindowFlags flags = Qt::Dialog;
-    if(main_window.settings->osd_hide_decoration())
+    if(main_window.settings.value("OSD/HideDecoration").toBool()) //->osd_hide_decoration())
     {
         flags |= Qt::FramelessWindowHint;
     }
     flags |= Qt::WindowStaysOnTopHint;
     this->setWindowTitle(title);
     this->setWindowFlags(flags);
-    this->move(main_window.settings->osd_position()); // I simple do not understand, why this doesn't work when toggling window border
-    this->resize(main_window.settings->osd_size());
+    this->move(main_window.settings.value("OSD/Position").toPoint()); // I simple do not understand, why this doesn't work when toggling window border
+    this->resize(main_window.settings.value("OSD/Size").toSize());
     this->show();
 }
 
@@ -61,14 +61,14 @@ void OSD::customContextMenuRequested(QPoint pos)
 
 void OSD::save_position()
 {
-    main_window.settings->setOsd_position(pos());
-    main_window.settings->setOsd_size(size());
+    main_window.settings.setValue("OSD/Position", pos());
+    main_window.settings.setValue("OSD/Size", size());
 }
 
 void OSD::toggle_window_border()
 {
     save_position();
-    main_window.settings->setOsd_hide_decoration(!main_window.settings->osd_hide_decoration());
+    main_window.settings.setValue("OSD/HideDecoration", !main_window.settings.value("OSD/HideDecoration").toBool() );
     showOSD(this->windowTitle());
 }
 

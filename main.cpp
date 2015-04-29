@@ -5,8 +5,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
-    MainWindow w(&a);
+    MainWindow w;
 
     QString youtube_url;
     if(argc > 1)

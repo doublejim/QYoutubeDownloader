@@ -4,16 +4,22 @@
 
 #include "mainwindow.h" // This can't be in settingswindow.h, because mainwindow.h includes settingswindow.h
 
-SettingsWindow::SettingsWindow(MainWindow *main_window, QWidget *parent) :
-    main_window_(main_window),
-    settings(main_window->settings),
+SettingsWindow::SettingsWindow(MainWindow &main_window, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SettingsWindow)
+    ui(new Ui::SettingsWindow),
+    main_window(main_window),
+    settingsII(&main_window.settings)
 {
     ui->setupUi(this);
-    load_settings();
 
-    //connect(ui->buttonBox,SIGNAL(clicked(QAbstractButton*)),this,SLOT(on_buttonBox_apply()));
+    settingsII.join("Settings/HideStatusButton", ui->checkHideStatusButton);
+    settingsII.join("Settings/DarkStyle", ui->checkDarkStyle);
+    settingsII.join("Settings/DoNotSaveSizeAndPosition", ui->checkDoNotSaveSizeAndPosition);
+    settingsII.join("Settings/MediaPlayer", ui->editMediaPlayerPath);
+    settingsII.join("Settings/MediaPlayerArgs", ui->editMediaPlayerArgs);
+    settingsII.join("Settings/OutputTemplate", ui->editOutputTemplate);
+    settingsII.join("Settings/Youtube-dlExecutable", ui->editYoutubedlExecutable);
+    settingsII.join("Settings/FFMPEGPath", ui->editFFMPEGPath);
 }
 
 SettingsWindow::~SettingsWindow()
@@ -21,40 +27,19 @@ SettingsWindow::~SettingsWindow()
     delete ui;
 }
 
-void SettingsWindow::load_settings()
-{
-    ui->checkHideStatusButton->setChecked(settings->hide_status_button());
-    ui->checkDarkStyle->setChecked(settings->dark_style());
-    ui->checkDoNotSaveSizeAndPosition->setChecked(settings->do_not_save_size_and_position());
-    ui->editMediaPlayerPath->setText(settings->media_player_path());
-    ui->editMediaPlayerArgs->setText(settings->media_player_args());
-    ui->editOutputTemplate->setText(settings->output_template());
-    ui->editYoutubedlExecutable->setText(settings->youtube_dl_executable());
-    ui->editFFMPEGPath->setText(settings->ffmpeg_path());
-}
-
-void SettingsWindow::save()
-{
-    settings->setHide_status_button(ui->checkHideStatusButton->isChecked());
-    settings->setDark_style(ui->checkDarkStyle->isChecked());
-    settings->setDo_not_save_size_and_position(ui->checkDoNotSaveSizeAndPosition->isChecked());
-    settings->setMedia_player_path(ui->editMediaPlayerPath->text());
-    settings->setMedia_player_args(ui->editMediaPlayerArgs->text());
-    settings->setOutput_template(ui->editOutputTemplate->text());
-    settings->setYoutube_dl_executable(ui->editYoutubedlExecutable->text());
-    settings->setFfmpeg_path(ui->editFFMPEGPath->text());
-
-    main_window_->apply_settings();
-}
-
 void SettingsWindow::on_buttonBox_accepted()
 {
-    save();
+    settingsII.saveSettingsFromGUI();
+    main_window.apply_settings_while_running();
 }
 
 void SettingsWindow::on_buttonBox_clicked(QAbstractButton *button)
 {
-    if (button->text()=="Apply") save();
+    if (button->text()=="Apply")
+    {
+        settingsII.saveSettingsFromGUI();
+        main_window.apply_settings_while_running();
+    }
 }
 
 void SettingsWindow::on_btnBrowseMediaPlayer_clicked()
@@ -76,13 +61,13 @@ void SettingsWindow::on_btnBrowseMediaPlayer_clicked()
 
 void SettingsWindow::on_btnSaveSizeAndPosition_clicked()
 {
-    settings->setSize(main_window_->size());
-    settings->setPosition(main_window_->pos());
+    main_window.settings.setValue("MainWindow/size", main_window.size());
+    main_window.settings.setValue("MainWindow/position", main_window.pos());
 }
 
 void SettingsWindow::on_btnResetSizeAndPosition_clicked()
 {
-    settings->setSize(QSize());
-    settings->setPosition(QPoint());
+    main_window.settings.setValue("MainWindow/size", QSize());
+    main_window.settings.setValue("MainWindow/position", QPoint());
 }
 

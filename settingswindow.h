@@ -2,6 +2,8 @@
 #define SETTINGSWINDOW_H
 #include <QDialog>
 #include <QAbstractButton>
+#include <QSettings>
+#include "qsettingsinterface.h"
 
 namespace Ui
 {
@@ -17,7 +19,7 @@ class SettingsWindow : public QDialog
     Q_OBJECT
 
 public:
-    explicit SettingsWindow(MainWindow *main_window, QWidget *parent = 0);
+    explicit SettingsWindow(MainWindow &main_window, QWidget *parent = 0);
     ~SettingsWindow();
     Settings *settings; // I put i here, so it is similar to mainwindow
 
@@ -27,12 +29,11 @@ private slots:
     void on_btnBrowseMediaPlayer_clicked();
     void on_btnSaveSizeAndPosition_clicked();
     void on_btnResetSizeAndPosition_clicked();
-    void load_settings();
-    void save();
 
 private:
+    MainWindow& main_window;
+    QSettingsInterface settingsII;
     Ui::SettingsWindow *ui;
-    MainWindow *main_window_;
 };
 
 #endif // SETTINGSWINDOW_H
