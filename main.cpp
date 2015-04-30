@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     if(ipc.is_first_instance())
     {
         if(youtube_url != "")
-            w.add_video_to_download_list(youtube_url);
+            w.add_video_to_download_list_DefaultFormat(youtube_url);
 
         w.show();
     }

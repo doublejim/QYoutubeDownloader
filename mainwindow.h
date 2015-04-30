@@ -15,6 +15,7 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <QFile>
+#include <QTableWidget>
 
 #include "settingswindow.h"
 #include "qsettingsinterface.h"
@@ -22,8 +23,10 @@
 #include "dialognewdownload.h"
 #include "aboutwindow.h"
 #include "osd.h"
+#include "filesearcher.h"
+#include "mediaitemmap.h"
 
-using namespace std;
+//using namespace std;
 
 namespace Ui {
 class MainWindow;
@@ -37,7 +40,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void add_video_to_download_list(QString url, int format = 0, bool download_subtitles = false);
+    void add_video_to_download_list(QString url, int format = 0, bool download_subtitles = false, bool download_metadata = false);
+    void add_video_to_download_list_DefaultFormat(QString url);
     QSettings settings;
     QSettingsInterface settingsI;
 
@@ -46,14 +50,18 @@ public:
     void cancel_download();
     void apply_settings_while_running();
 
+public slots:
+    void receivedMediaFiles(MediaItemMap itemmap);
+
+signals:
+    void sigYouShouldSearchForMedia(QString,QStringList);
+
 private slots:
     void check_download_path();
     void fix_download_path();
     void stop_downloading();
     void delete_selected_item_on_queue();
     void open_video();
-    void refresh_filelist();
-    void refresh_filelist_filtering();
     void select_directory();
     void refresh_interface();
     void download_top_video();
@@ -63,9 +71,6 @@ private slots:
     void on_btnBrowse_clicked();
     void on_btnAddVideoToQueue_clicked();
     void on_editDownloadPath_textChanged();
-    void on_listVideos_doubleClicked();
-    void on_editSearch_textChanged();
-    void on_comboSortType_currentIndexChanged(int a);
     void on_actionSettings_Menu_triggered();
     void on_actionQuit_triggered();
     void on_actionAbout_triggered();
@@ -81,27 +86,44 @@ private slots:
     void delete_file_from_disk();
     void shortcut_delete();
     void autostart_download(const QModelIndex&, int, int);
+    // Media function
+    QList<QTableWidgetItem*> make_MediaList_row(MediaItem& mediaitem, int unique_id);
+    void fillMediaList(MediaItemMap* itemmap);
+    void refresh_MediaList();
+    void refresh_MediaList_filtering();
+    void on_tableMedia_doubleClicked();
+    //
+    void on_editSearchTitle_textChanged(const QString &arg1);
+    void on_editSearchDate_textChanged(const QString &arg1);
+    void on_comboSearchDate_currentIndexChanged(int index);
+    void on_editSearchUploader_textChanged(const QString &arg1);
 
 private:
-    OSD *osd_;
-
     void init_color_scheme();
     void save_settings();
     void apply_settings_at_startup();
-
     void play_video(QString file);
     void resolve_title(int item_key, QString url);
     void resolve_playlist_titles(QProcess * youtube_dl);
 
-    QMap <int,QueueItem> queue_items; // item data map.
-    QProcess* youtube_dl = nullptr;
+    // Media search
+    QThread fsearchThread;
+    FileSearcher* fsearch;
+    MediaItemMap allMedia;
+    MediaItemMap* currentMedia = nullptr;
 
+    // Main program function
+    QProcess* youtube_dl = nullptr;
+    QMap <int,QueueItem> queue_items; // item data map.
     int download_progress = 0;
     QStringList complete_filelist;
     int unique_item_key = 0;
     bool going_to_play_video = false;
     QString last_youtubedl_output;
     QString last_audio_destination;
+
+    // Additional
+    OSD *osd_;
 
     Ui::MainWindow *ui;
 };

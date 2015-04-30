@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>328</width>
-    <height>123</height>
+    <height>157</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,6 +52,13 @@
     <widget class="QCheckBox" name="checkDownloadSubs">
      <property name="text">
       <string>Download subtitles (if available)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkDownloadMeta">
+     <property name="text">
+      <string>Download metadata</string>
      </property>
     </widget>
    </item>

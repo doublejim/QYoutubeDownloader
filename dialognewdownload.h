@@ -17,7 +17,8 @@ public:
     QString download_url;
     int format_to_download;
     bool download_subtitles = false;
-    void load(QString url = "", int format_to_download = 0, bool download_subtitles = false);
+    bool download_metadata = true;
+    void load(QString url = "", int format_to_download = 0, bool download_subtitles = false, bool download_metadata = true);
 
 private slots:
     void on_btnboxOkCancel_accepted();

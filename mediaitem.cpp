@@ -7,7 +7,7 @@ QString MediaItem::getJsonElement(QString &allJsonContent, QString element)
     return match.captured(2);
 }
 
-QList<int> MediaItem::giveDate(QString dateString)
+QList<int> MediaItem::giveDate(QString dateString) // the date is returned as a list of ints, for instance: { 2015, 01, 01 }
 {
     QRegularExpression exp ("(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)");
     QRegularExpressionMatch match = exp.match(dateString);

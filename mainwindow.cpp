@@ -37,17 +37,28 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboSubdirPattern->addItem("Uploader name", "%(uploader)s");
     ui->comboSubdirPattern->addItem("Playlist title", "%(playlist)s");
 
-    settingsI.join("Main/DownloadPath",ui->editDownloadPath, ".");
-    settingsI.join("Main/LastSearch",ui->editSearch);
-    settingsI.join("Main/comboSortType",ui->comboSortType);
-    settingsI.join("Main/OpenInPlayerAfterDownload",ui->checkOpenInPlayerAfterDownload);
-    settingsI.join("Main/ExitWhenFinished",ui->checkExitWhenFinshed);
-    settingsI.join("Main/SaveToSubdir",ui->checkSaveToSubdir);
-    settingsI.join("Main/SubdirPattern",ui->comboSubdirPattern);
-    settingsI.join("Main/AutoDownload",ui->checkAutoDownload);
-    settingsI.join("Main/DownloadSubtitles",ui->checkDownloadSubs);
+    settingsI.join("Main/DownloadPath", ui->editDownloadPath, ".");
+    settingsI.join("Main/SearchUploader", ui->editSearchUploader);
+    settingsI.join("Main/SearchTitle", ui->editSearchTitle);
+    settingsI.join("Main/SearchDate", ui->editSearchDate);
+    settingsI.join("Main/SearchDateCombo", ui->comboSearchDate);
+    settingsI.join("Main/OpenInPlayerAfterDownload", ui->checkOpenInPlayerAfterDownload);
+    settingsI.join("Main/ExitWhenFinished", ui->checkExitWhenFinshed);
+    settingsI.join("Main/SaveToSubdir", ui->checkSaveToSubdir);
+    settingsI.join("Main/SubdirPattern", ui->comboSubdirPattern);
+    settingsI.join("Main/AutoDownload", ui->checkAutoDownload);
+    settingsI.join("Main/DownloadSubtitles", ui->checkDownloadSubs);
+    settingsI.join("Main/DownloadMetadata", ui->checkDownloadMeta);
 
     apply_settings_at_startup();
+
+    // Media file searching.
+    fsearch = new FileSearcher;
+    fsearch->moveToThread(&fsearchThread);
+    fsearchThread.start();
+    qRegisterMetaType<MediaItemMap>("MediaItemMap");
+    connect(this,&MainWindow::sigYouShouldSearchForMedia,fsearch, &FileSearcher::beginSearch);
+    connect(fsearch,&FileSearcher::sigMediaSearchComplete,this,&MainWindow::receivedMediaFiles);
 
     // TODO: replace the OLD SIGNALS/SLOTS with the MODERN way of writing it:
     // like this: connect(item_from, &MainWindow::function_from, item_to, &OtherWindow::function_to);
@@ -56,8 +67,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QShortcut* shortcut_del = new QShortcut(QKeySequence(Qt::Key_Delete),this);
     connect(shortcut_del, SIGNAL(activated()), this, SLOT(shortcut_delete()));
 
-    QShortcut* shortcut_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->listVideos);
-    connect(shortcut_enter, SIGNAL(activated()), this, SLOT(on_listVideos_doubleClicked()));
+    QShortcut* shortcut_enter = new QShortcut(QKeySequence(Qt::Key_Return), ui->tableMedia);
+    connect(shortcut_enter, SIGNAL(activated()), this, SLOT(on_tableMedia_doubleClicked()));
 
     QShortcut* shortcut_ctrl_v = new QShortcut(QKeySequence(tr("Ctrl+V")), ui->listVideoQueue);
     connect(shortcut_ctrl_v, SIGNAL(activated()),this,SLOT(listVideoQueue_paste()));
@@ -67,6 +78,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
     qRegisterMetaType<QVector<int> >("QVector<int>");
+
+    refresh_MediaList();
+    refresh_MediaList_filtering();
 }
 
 MainWindow::~MainWindow()
@@ -78,6 +92,10 @@ MainWindow::~MainWindow()
         save_settings();
         settingsI.saveSettingsFromGUI();
     }
+
+    delete fsearch;
+    fsearchThread.exit();
+    fsearchThread.wait();
 
     delete ui;
 }
@@ -102,6 +120,10 @@ void MainWindow::apply_settings_at_startup()
         ui->stackedQueueInfoOptions->show();
     else
         ui->stackedQueueInfoOptions->hide();
+
+    ui->tableMedia->setColumnWidth(0, settings.value("MainWindow/Column0Size",60).toInt());
+    ui->tableMedia->setColumnWidth(1, settings.value("MainWindow/Column1Size",200).toInt());
+    ui->tableMedia->setColumnWidth(2, settings.value("MainWindow/Column2Size",60).toInt());
 
     // defaults:
     if (settings.value("Settings/Youtube-dlExecutable").toString()=="")
@@ -144,6 +166,10 @@ void MainWindow::save_settings() // the settings that the QSettingsInterface can
 
     settings.setValue("Main/ExpandStatusAndSettings", !ui->stackedQueueInfoOptions->isHidden() );
     settings.setValue("Main/StackedWidgetActivePage", ui->stackedQueueInfoOptions->currentIndex());
+
+    settings.setValue("MainWindow/Column0Size", ui->tableMedia->columnWidth(0));
+    settings.setValue("MainWindow/Column1Size", ui->tableMedia->columnWidth(1));
+    settings.setValue("MainWindow/Column2Size", ui->tableMedia->columnWidth(2));
 }
 
 void MainWindow::init_color_scheme()
@@ -196,22 +222,16 @@ void MainWindow::listVideoQueue_paste()
         if (ui->radioAudioVideo->isChecked())
             format=0;
         else format=1;
-        add_video_to_download_list( text, format, ui->checkDownloadSubs->isChecked() );
+        add_video_to_download_list_DefaultFormat(text);
     }
 }
 
 // TODO: Make it possible to send arguments to player.
 void MainWindow::open_video()
 {
-    fix_download_path();
-
-    QListWidgetItem *item = ui->listVideos->currentItem();
-    QString dir = ui->editDownloadPath->text();
-
-    QString file = dir + item->text();
-
+    QTableWidgetItem *item = ui->tableMedia->currentItem();
+    QString file = allMedia.returnItem(item->data(Qt::UserRole).toInt()).fullFilePath;
     play_video(file);
-
     going_to_play_video = false; //(it already did at this point)
 }
 
@@ -317,37 +337,6 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
     last_youtubedl_output = newOutput;
 }
 
-void MainWindow::check_download_path()
-{
-    QDir dir = ui->editDownloadPath->text();
-
-    if (dir.exists()==false || ui->editDownloadPath->text() == "")
-    {
-        complete_filelist.clear(); // must be done: in case the filter is changed, so it doesn't show any files from the previous path.
-        ui->listVideos->clear();
-        QListWidgetItem *item = new QListWidgetItem("[invalid folder]");
-        ui->listVideos->addItem(item);
-        ui->listVideos->setStyleSheet("font: italic 8pt \"MS Shell Dlg 2\"");
-        return;
-    }
-    else if (complete_filelist.size() == 0)
-    {
-        ui->listVideos->clear();
-        QListWidgetItem *item = new QListWidgetItem("[no media files found...]");
-        ui->listVideos->addItem(item);
-        ui->listVideos->setStyleSheet("font: italic 8pt \"MS Shell Dlg 2\"");
-    }
-}
-
-void MainWindow::fix_download_path()
-{
-    QString dir = QDir::cleanPath(ui->editDownloadPath->text()); // saves a clean version of the path.
-    if(dir == ".")
-        dir = QDir::currentPath();
-
-    ui->editDownloadPath->setText(dir + '/');
-}
-
 void MainWindow::download_top_video()
 {
     if (ui->listVideoQueue->count()==0) return; // quits if the list is empty
@@ -388,6 +377,8 @@ void MainWindow::download_top_video()
 
     if ( queue_items[current_item_key].downloadSubtitles )
         arguments << "--all-subs";
+    if ( queue_items[current_item_key].downloadMetadata )
+        arguments << "--write-info-json";
 
     youtube_dl = new QProcess(this);
     connect (youtube_dl, SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
@@ -559,7 +550,7 @@ void MainWindow::autostart_download(const QModelIndex&, int, int)
         download_top_video();
 }
 
-void MainWindow::add_video_to_download_list(QString url, int format, bool download_subtitles)
+void MainWindow::add_video_to_download_list(QString url, int format, bool download_subtitles, bool download_metadata)
 {
     QListWidgetItem *item = new QListWidgetItem(url);
 
@@ -571,6 +562,7 @@ void MainWindow::add_video_to_download_list(QString url, int format, bool downlo
         queue_items[unique_item_key].title = url;
         queue_items[unique_item_key].format = format;
         queue_items[unique_item_key].downloadSubtitles = download_subtitles;
+        queue_items[unique_item_key].downloadMetadata = download_metadata;
 
         create_item_title_from_its_data(item);
         ui->listVideoQueue->addItem(item);
@@ -581,42 +573,116 @@ void MainWindow::add_video_to_download_list(QString url, int format, bool downlo
     ++unique_item_key;
 }
 
-void MainWindow::refresh_filelist() // stores a list of filenames from the download path, in correct order, but doesn't show anything.
+void MainWindow::add_video_to_download_list_DefaultFormat(QString url)
+{
+    int format = 0;
+    if (ui->radioAudioOnly->isChecked()) format = 1;
+
+    add_video_to_download_list(url, format, ui->checkDownloadSubs->isChecked(), ui->checkDownloadMeta->isChecked());
+}
+
+void MainWindow::check_download_path()
 {
     QDir dir = ui->editDownloadPath->text();
-    if (dir.exists()==false) return;
 
-    QStringList filters;
-    filters << "*.mp4" << "*.m4a" << "*.mp3" << "*.ogg" << "*.flv" << "*.webm" << "*.mkv";
-    ui->listVideos->clear();
-    complete_filelist.clear();
-
-    switch (ui->comboSortType->currentIndex())
+    if (!dir.exists() || ui->editDownloadPath->text() == "")
     {
-        case 0:
-            foreach (QFileInfo file, dir.entryInfoList(filters,QDir::Files,QDir::Time | QDir::Reversed))
-                complete_filelist << file.fileName();
-            break;
-
-        case 1:
-            foreach (QFileInfo file, dir.entryInfoList(filters,QDir::Files,QDir::Name))
-                complete_filelist << file.fileName();
-            break;
+        ui->tableMedia->clearContents();
+        QTableWidgetItem* item = new QTableWidgetItem("[invalid folder]");
+        ui->tableMedia->setRowCount(1);
+        ui->tableMedia->setItem(0,1,item);
     }
 }
 
-void MainWindow::refresh_filelist_filtering() // filters the videos (without searching the harddisk)
+void MainWindow::fix_download_path()
 {
-    ui->listVideos->setStyleSheet("font: 8pt \"MS Shell Dlg 2\"");
-    ui->listVideos->clear();
-    foreach (QString title,complete_filelist)
+    QString dir = QDir::cleanPath(ui->editDownloadPath->text()); // saves a clean version of the path.
+    if(dir == ".") dir = QDir::currentPath();
+
+    ui->editDownloadPath->setText(dir + '/');
+}
+
+QList<QTableWidgetItem*> MainWindow::make_MediaList_row(MediaItem& mediaitem, int unique_id)
+{
+    QList<QTableWidgetItem*> newRow;
+
+    // UPLOADER
+    QTableWidgetItem* newuploader = new QTableWidgetItem("");
+    newuploader->setData(Qt::DisplayRole, mediaitem.uploader);
+    newuploader->setData(Qt::UserRole, unique_id);
+    newRow.append(newuploader);
+
+    // TITLE
+    QTableWidgetItem* newtitle = new QTableWidgetItem("");
+    newtitle->setData(Qt::DisplayRole, mediaitem.title);
+    newtitle->setData(Qt::UserRole,unique_id);
+    newRow.append(newtitle);
+
+    // DATE
+    QTableWidgetItem* newdate = new QTableWidgetItem("");
+    newdate->setData(Qt::DisplayRole, mediaitem.upload_date.toString(Qt::ISODate));
+    newdate->setData(Qt::UserRole,unique_id);
+    newRow.append(newdate);
+
+    return newRow;
+}
+
+void MainWindow::fillMediaList(MediaItemMap* itemmap)
+{
+    if (itemmap==nullptr) return;
+    ui->tableMedia->clearContents();
+    ui->tableMedia->setRowCount(0);
+    int index = 0;
+    foreach(MediaItem mediaitem, itemmap->returnAllItems())
     {
-        if (title.lastIndexOf(ui->editSearch->text(),-1,Qt::CaseInsensitive)!=-1)
-        {
-            QListWidgetItem * item = new QListWidgetItem(title);
-            ui->listVideos->addItem(item);
-        }
+        QList<QTableWidgetItem*> newitem = make_MediaList_row(mediaitem, index);
+        ui->tableMedia->insertRow(ui->tableMedia->rowCount());
+        ui->tableMedia->setItem(index, 0, newitem.at(0));
+        ui->tableMedia->setItem(index, 1, newitem.at(1));
+        ui->tableMedia->setItem(index, 2, newitem.at(2));
+        ++index;
     }
+}
+
+void MainWindow::receivedMediaFiles(MediaItemMap itemmap)
+{
+    if (itemmap.returnItemsCount() == 0)
+    {
+        ui->tableMedia->clearContents();
+        QTableWidgetItem* item = new QTableWidgetItem("[no media files in folder]");
+        ui->tableMedia->setRowCount(1);
+        ui->tableMedia->setItem(0,1,item);
+        return;
+    }
+    allMedia=itemmap;
+    currentMedia = new MediaItemMap(allMedia);
+    fillMediaList(&allMedia);
+}
+
+void MainWindow::refresh_MediaList()
+{
+    QDir dir = ui->editDownloadPath->text();
+    if (!dir.exists()) return;
+    ui->tableMedia->clearContents();
+    QTableWidgetItem* item = new QTableWidgetItem("searching...");
+    ui->tableMedia->setRowCount(1);
+    ui->tableMedia->setItem(0,1,item);
+
+    QStringList fileFilter;
+    fileFilter << "mkv" << "m4a" << "mp4" << "mp3" << "ogg" << "flv" << "webm";
+    emit sigYouShouldSearchForMedia(ui->editDownloadPath->text(),fileFilter);
+}
+
+void MainWindow::refresh_MediaList_filtering() // filters the videos (without searching the harddisk)
+{
+    if (currentMedia!=nullptr)
+        delete currentMedia;
+    currentMedia = new MediaItemMap(allMedia);
+    if (ui->editSearchUploader->text() != "") (*currentMedia)=allMedia.returnItemsSearchUploader(currentMedia,ui->editSearchUploader->text());
+    if (ui->editSearchTitle->text() != "") (*currentMedia)=allMedia.returnItemsSearchTitle(currentMedia,ui->editSearchTitle->text());
+    if (ui->editSearchDate->text() != "") (*currentMedia)=allMedia.returnItemsSearchDate(currentMedia,ui->editSearchDate->text(), MediaItemMap::date_comparison(ui->comboSearchDate->currentIndex()));
+
+    fillMediaList(currentMedia);
 }
 
 void MainWindow::downloading_ended(int a) // delete top video, download next top video. a is not used, but required by the signal.
@@ -643,8 +709,17 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
         }
     }
     download_progress=0;
-    refresh_filelist();
-    refresh_filelist_filtering();
+
+    // RIGHT HERE I WANT TO JUST ADD A SINGLE ITEM INSTEAD OF REFRESHING THE WHOLE LIST.
+    //MediaItem mediaitem;
+    //QList<QTableWidgetItem*> newitem = make_MediaList_row(mediaitem, index);
+    //ui->tableMedia->insertRow(ui->tableMedia->rowCount());
+    //ui->tableMedia->setItem(index, 0, newitem.at(0));
+    //ui->tableMedia->setItem(index, 1, newitem.at(1));
+    //ui->tableMedia->setItem(index, 2, newitem.at(2));
+
+    refresh_MediaList();
+    refresh_MediaList_filtering();
     QListWidgetItem *item = ui->listVideoQueue->item(0);
     int item_key = item->data(Qt::UserRole).toInt();
     delete item;
@@ -680,36 +755,15 @@ void MainWindow::on_btnAddVideoToQueue_clicked() // add video to download list
     dialog.setModal(true);
     if (dialog.exec())
     {
-        add_video_to_download_list(dialog.download_url, dialog.format_to_download, dialog.download_subtitles);
+        add_video_to_download_list(dialog.download_url, dialog.format_to_download, dialog.download_subtitles, dialog.download_metadata);
     }
 }
 
 void MainWindow::on_editDownloadPath_textChanged() // download folder lineEdit box
 {
     if (going_to_play_video==true) return;
-    refresh_filelist();
-    refresh_filelist_filtering();
-    check_download_path();
-}
-
-void MainWindow::on_listVideos_doubleClicked() // downloaded videos list doubleclick
-{
-    going_to_play_video=true;
-    check_download_path();
-    fix_download_path();
-    open_video();
-}
-
-void MainWindow::on_editSearch_textChanged() // search text changed
-{
-    refresh_filelist_filtering();
-    if (ui->editSearch->text().length()==0) check_download_path();
-}
-
-void MainWindow::on_comboSortType_currentIndexChanged(int a) // new type of sorting
-{
-    refresh_filelist();
-    refresh_filelist_filtering();
+    refresh_MediaList();
+    refresh_MediaList_filtering();
     check_download_path();
 }
 
@@ -774,24 +828,26 @@ void MainWindow::toggle_download_format()
 
 void MainWindow::delete_file_from_disk()
 {
-    if (ui->listVideos->currentRow()==-1) return;
+    if (ui->tableMedia->currentRow()==-1) return;
+
+    QTableWidgetItem* item = ui->tableMedia->currentItem();
 
     QMessageBox message;
-    if (message.question(this, "Confirm File Delete", "Are you sure you want to delete\n"+ui->listVideos->currentItem()->text()+"\nfrom disk?",
+    if (message.question(this, "Confirm File Delete", "Are you sure you want to delete\n"+allMedia.returnItem(item->data(Qt::UserRole).toInt()).fileName+"\nfrom disk?",
                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No)==QMessageBox::Yes)
     {
-        QListWidgetItem* item = ui->listVideos->currentItem();
+        QTableWidgetItem* item = ui->tableMedia->currentItem();
         QString item_text = item->text();
-        fix_download_path(); // <- possibly deselects the current item - that's why it's right there.
-        QFile file (ui->editDownloadPath->text() + item_text);
+        fix_download_path(); // <- possibly deselects the current item - that's why it's right there. ( <-- what does that mean?)
+        QFile file (allMedia.returnItem(item->data(Qt::UserRole).toInt()).fullFilePath);
 
         if (file.remove())
         {
             QMessageBox response;
             response.setText("The file was deleted.");
             response.exec();
-            refresh_filelist();
-            refresh_filelist_filtering();
+            ui->tableMedia->removeRow(ui->tableMedia->currentRow());
+            allMedia.removeItem(item->data(Qt::UserRole).toInt());
         }
         else
         {
@@ -806,7 +862,7 @@ void MainWindow::shortcut_delete()
 {
     if (ui->listVideoQueue->hasFocus())
         delete_selected_item_on_queue();
-    else if (ui->listVideos->hasFocus())
+    else if (ui->tableMedia->hasFocus())
         delete_file_from_disk();
 }
 
@@ -843,3 +899,32 @@ void MainWindow::on_checkAutoDownload_clicked()
     settings.setValue("Main/AutoDownload",ui->checkAutoDownload->isChecked());
 }
 
+void MainWindow::on_editSearchUploader_textChanged(const QString &arg1)
+{
+    refresh_MediaList_filtering();
+}
+
+void MainWindow::on_editSearchTitle_textChanged(const QString &arg1)
+{
+    refresh_MediaList_filtering();
+}
+
+void MainWindow::on_editSearchDate_textChanged(const QString &arg1)
+{
+    refresh_MediaList_filtering();
+}
+
+void MainWindow::on_comboSearchDate_currentIndexChanged(int index)
+{
+    refresh_MediaList_filtering();
+}
+
+void MainWindow::on_tableMedia_doubleClicked() // doubleclicking on a media item.
+{
+    QTableWidgetItem* item = ui->tableMedia->currentItem();
+    QFile file (allMedia.returnItem(item->data(Qt::UserRole).toInt()).fullFilePath);
+    if (!file.exists()) return;
+    going_to_play_video=true;
+    fix_download_path();
+    open_video();
+}

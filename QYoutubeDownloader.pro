@@ -30,7 +30,10 @@ SOURCES += main.cpp\
     sharedmemory.cpp \
     aboutwindow.cpp \
     osd.cpp \
-    qsettingsinterface.cpp
+    qsettingsinterface.cpp \
+    filesearcher.cpp \
+    mediaitem.cpp \
+    mediaitemmap.cpp
 
 HEADERS  += mainwindow.h \
     dialognewdownload.h \
@@ -39,7 +42,10 @@ HEADERS  += mainwindow.h \
     sharedmemory.h \
     aboutwindow.h \
     osd.h \
-    qsettingsinterface.h
+    qsettingsinterface.h \
+    filesearcher.h \
+    mediaitem.h \
+    mediaitemmap.h
 
 FORMS    += mainwindow.ui \
     dialognewdownload.ui \

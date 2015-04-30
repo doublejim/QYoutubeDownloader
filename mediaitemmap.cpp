@@ -18,14 +18,12 @@ MediaItem MediaItemMap::returnItem(int item_id)
 
 QList<MediaItem> MediaItemMap::returnAllItems()
 {
-    QList<MediaItem> results;
-    QMap <int, MediaItem>::iterator i = map.begin();
-    while (i != map.end())
-            {
-                results.append(i.value());
-                ++i;
-            }
-    return results;
+    return map.values();
+}
+
+int MediaItemMap::returnItemsCount()
+{
+    return map.size();
 }
 
 MediaItemMap MediaItemMap::returnItemsSearchUploader(MediaItemMap* dataset, QString search)
@@ -47,7 +45,7 @@ MediaItemMap MediaItemMap::returnItemsSearchTitle(MediaItemMap* dataset, QString
 }
 
 MediaItemMap MediaItemMap::returnItemsSearchDate(MediaItemMap* dataset, QString search, MediaItemMap::date_comparison comp)
-{ // not in use yet. probably useful!
+{
     MediaItemMap results;
     switch(comp)
     {
@@ -68,9 +66,4 @@ MediaItemMap MediaItemMap::returnItemsSearchDate(MediaItemMap* dataset, QString 
         break;
     }
     return results;
-}
-
-void MediaItemMap::absorbMap(MediaItemMap* absorbMap)
-{
-   // not done yet. probably needed for advanced searching.
 }
