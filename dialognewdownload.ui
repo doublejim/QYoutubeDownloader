@@ -49,6 +49,13 @@
     </layout>
    </item>
    <item>
+    <widget class="QCheckBox" name="checkDownloadSubs">
+     <property name="text">
+      <string>Download subtitles (if available)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="btnboxOkCancel">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

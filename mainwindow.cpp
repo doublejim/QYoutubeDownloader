@@ -3,6 +3,23 @@
 
 //using namespace std;
 
+/* INCONSISTENCIES:
+ * 1________________________________________________________________
+ * There is an inconsistency when it comes to checking a setting:
+ * It is some times checked by:      QSettings settings.value().
+ * Other times it's checked directly on the state of the object:        if checkBox.isChecked()
+ *
+ * I suggest always checking directly on the state of the object (if there is a corresponding object, of course).
+ * Then it's not required that the QSettings setting is changed while running the program.
+ * That means: fever functions: less code.
+ * 2__________________________________________________________________
+ * Should class variables always be private?
+ * For instance, in the QueueItem is currently used:     setFormat()
+ * instead of working directly on the variables (and right now they are public).
+ * I'm not sure which is best.
+ *
+ */
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     settings (QSettings::IniFormat, QSettings::UserScope, "QYoutubeDownloader", "config"),
@@ -28,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
     settingsI.join("Main/SaveToSubdir",ui->checkSaveToSubdir);
     settingsI.join("Main/SubdirPattern",ui->comboSubdirPattern);
     settingsI.join("Main/AutoDownload",ui->checkAutoDownload);
+    settingsI.join("Main/DownloadSubtitles",ui->checkDownloadSubs);
 
     apply_settings_at_startup();
 
@@ -174,7 +192,11 @@ void MainWindow::listVideoQueue_paste()
     if (mimeData->hasText())
     {
         text = mimeData->text();
-        add_video_to_download_list(text);
+        int format;
+        if (ui->radioAudioVideo->isChecked())
+            format=0;
+        else format=1;
+        add_video_to_download_list( text, format, ui->checkDownloadSubs->isChecked() );
     }
 }
 
@@ -364,6 +386,9 @@ void MainWindow::download_top_video()
               << "--merge-output-format" << "mkv"
               << queue_items[current_item_key].url;
 
+    if ( queue_items[current_item_key].downloadSubtitles )
+        arguments << "--all-subs";
+
     youtube_dl = new QProcess(this);
     connect (youtube_dl, SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
     connect (youtube_dl, SIGNAL(finished(int)), this, SLOT(downloading_ended(int)));
@@ -389,21 +414,19 @@ void MainWindow::download_top_video()
 
 void MainWindow::on_listVideoQueue_doubleClicked() // edit item
 {
-    DialogNewDownload dialog1;
-    dialog1.setWindowTitle("Download this video");
-    dialog1.setModal(true);
+    DialogNewDownload dialog;
+    dialog.setWindowTitle("Download this video");
+    dialog.setModal(true);
     QListWidgetItem *item = ui->listVideoQueue->item( ui->listVideoQueue->currentRow() );
     int current_item_key = item->data(Qt::UserRole).toInt();
 
-    dialog1.load(queue_items[current_item_key].title, queue_items[current_item_key].format);
-    // the solution to loading the settings should also be applied here!
+    dialog.load(queue_items[current_item_key].title, queue_items[current_item_key].format, queue_items[current_item_key].downloadSubtitles);
 
-    if (dialog1.exec())
+    if (dialog.exec())
     {
-        QString url = dialog1.user_input;
-        int format = dialog1.format_to_download;
-        queue_items[current_item_key].setTitle(url);
-        queue_items[current_item_key].setFormat(format);
+        queue_items[current_item_key].setTitle( dialog.download_url );
+        queue_items[current_item_key].setFormat( dialog.format_to_download );
+        queue_items[current_item_key].downloadSubtitles = dialog.download_subtitles;
         create_item_title_from_its_data(item);
         ui->listVideoQueue->addItem(item);
     }
@@ -536,7 +559,7 @@ void MainWindow::autostart_download(const QModelIndex&, int, int)
         download_top_video();
 }
 
-void MainWindow::add_video_to_download_list(QString url, int format)
+void MainWindow::add_video_to_download_list(QString url, int format, bool download_subtitles)
 {
     QListWidgetItem *item = new QListWidgetItem(url);
 
@@ -547,6 +570,7 @@ void MainWindow::add_video_to_download_list(QString url, int format)
         queue_items[unique_item_key].url = url;
         queue_items[unique_item_key].title = url;
         queue_items[unique_item_key].format = format;
+        queue_items[unique_item_key].downloadSubtitles = download_subtitles;
 
         create_item_title_from_its_data(item);
         ui->listVideoQueue->addItem(item);
@@ -651,14 +675,12 @@ void MainWindow::on_btnBrowse_clicked() // browse for a directory
 
 void MainWindow::on_btnAddVideoToQueue_clicked() // add video to download list
 {
-    DialogNewDownload dialog1;
-    dialog1.setWindowTitle("Download this video");
-    dialog1.setModal(true);
-    if (dialog1.exec())
+    DialogNewDownload dialog;
+    dialog.setWindowTitle("Download this video");
+    dialog.setModal(true);
+    if (dialog.exec())
     {
-        QString url = dialog1.user_input;
-        int format = dialog1.format_to_download;
-        add_video_to_download_list(url, format);
+        add_video_to_download_list(dialog.download_url, dialog.format_to_download, dialog.download_subtitles);
     }
 }
 
@@ -820,3 +842,4 @@ void MainWindow::on_checkAutoDownload_clicked()
 {
     settings.setValue("Main/AutoDownload",ui->checkAutoDownload->isChecked());
 }
+

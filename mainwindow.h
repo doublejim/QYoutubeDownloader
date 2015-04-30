@@ -37,7 +37,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void add_video_to_download_list(QString url, int format = 0);
+    void add_video_to_download_list(QString url, int format = 0, bool download_subtitles = false);
     QSettings settings;
     QSettingsInterface settingsI;
 

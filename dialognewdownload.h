@@ -14,9 +14,10 @@ class DialogNewDownload : public QDialog
 public:
     explicit DialogNewDownload(QWidget *parent = 0);
     ~DialogNewDownload();
-    QString user_input;
+    QString download_url;
     int format_to_download;
-    void load(QString url, int format_to_download);
+    bool download_subtitles = false;
+    void load(QString url = "", int format_to_download = 0, bool download_subtitles = false);
 
 private slots:
     void on_btnboxOkCancel_accepted();

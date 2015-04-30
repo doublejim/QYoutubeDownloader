@@ -231,6 +231,13 @@
                </layout>
               </item>
               <item>
+               <widget class="QCheckBox" name="checkDownloadSubs">
+                <property name="text">
+                 <string>Download subtitles (if available)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="Line" name="line_5">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -383,7 +390,7 @@
      <x>0</x>
      <y>0</y>
      <width>771</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="defaultUp">

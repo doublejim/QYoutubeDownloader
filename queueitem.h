@@ -11,6 +11,7 @@ public:
     QString title = "";
     QString url = "";
     ushort format = 0;
+    bool downloadSubtitles = false;
 
     int setFormat(int i);
     QString setTitle(QString& newtitle);
