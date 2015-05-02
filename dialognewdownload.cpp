@@ -18,7 +18,7 @@ void DialogNewDownload::load(QString url, int format_to_download, bool download_
     ui->editUserInput->setText(url);
     if (format_to_download == 0)
         ui->radioVideoAudio->setChecked(true);
-    else ui->radioAudioOnly->setChecked(false);
+    else ui->radioAudioOnly->setChecked(true);
 
     ui->checkDownloadSubs->setChecked(download_subtitles);
     ui->checkDownloadMeta->setChecked(download_metadata);
@@ -28,10 +28,7 @@ void DialogNewDownload::on_btnboxOkCancel_accepted()
 {
     download_url = ui->editUserInput->text();
 
-    if (ui->radioVideoAudio->isChecked())
-         format_to_download = 0;
-    else format_to_download = 1;
-
+    format_to_download = ui->radioVideoAudio->isChecked() ? 0 : 1;
     download_subtitles = ui->checkDownloadSubs->isChecked();
     download_metadata = ui->checkDownloadMeta->isChecked();
 }

@@ -403,13 +403,14 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
     QListWidgetItem *item = ui->listVideoQueue->item( ui->listVideoQueue->currentRow() );
     int current_item_key = item->data(Qt::UserRole).toInt();
 
-    dialog.load(queue_items[current_item_key].title, queue_items[current_item_key].format, queue_items[current_item_key].downloadSubtitles);
+    dialog.load(queue_items[current_item_key].title, queue_items[current_item_key].format, queue_items[current_item_key].downloadSubtitles, queue_items[current_item_key].downloadMetadata);
 
     if (dialog.exec())
     {
         queue_items[current_item_key].setTitle( dialog.download_url );
         queue_items[current_item_key].setFormat( dialog.format_to_download );
         queue_items[current_item_key].downloadSubtitles = dialog.download_subtitles;
+        queue_items[current_item_key].downloadMetadata = dialog.download_metadata;
         create_item_title_from_its_data(item);
         ui->listVideoQueue->addItem(item);
     }
@@ -460,6 +461,8 @@ void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
 
 void MainWindow::resolve_title(int item_key, QString url)
 {
+    // Use youtube-dl --flat-playlist %url% to find out how many videos it's going to resolve!
+    // show this in the new-video dialog.
     try
     {
         QString program = settings.value("Settings/Youtube-dlExecutable").toString();
@@ -518,7 +521,9 @@ void MainWindow::resolve_playlist_titles(QProcess *get_title)
             item = new QListWidgetItem(line);
             item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
             queue_items[unique_item_key].title = line;
-            queue_items[unique_item_key].format = ui->radioAudioVideo->isChecked() ? 0 : 1;
+            queue_items[unique_item_key].format = ui->radioAudioVideo->isChecked() ? 0 : 1; // IT SHOULDN'T JUST TAKE DEFAULTS
+            queue_items[unique_item_key].downloadSubtitles = ui->checkDownloadSubs->isChecked(); // IT SHOULDN'T JUST TAKE DEFAULTS
+            queue_items[unique_item_key].downloadMetadata = ui->checkDownloadMeta->isChecked(); // IT SHOULDN'T JUST TAKE DEFAULTS
             create_item_title_from_its_data(item);
         }
         else
