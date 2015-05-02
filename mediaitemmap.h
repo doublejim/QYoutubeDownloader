@@ -23,13 +23,15 @@ public:
 
 public slots:
     void addItem(MediaItem item);
+    void addItemGiveID(MediaItem item);
     void removeItem(int item_id);
     MediaItem returnItem(int item_id);
+    void clear();
     QList<MediaItem> returnAllItems();
     int returnItemsCount();
-    MediaItemMap returnItemsSearchUploader(MediaItemMap *dataset, QString search);
-    MediaItemMap returnItemsSearchTitle(MediaItemMap *dataset, QString search);
-    MediaItemMap returnItemsSearchDate(MediaItemMap *dataset, QString search, MediaItemMap::date_comparison comp);
+    MediaItemMap returnItemsSearchUploader(QString search);
+    MediaItemMap returnItemsSearchTitle(QString search);
+    MediaItemMap returnItemsSearchDate(QString search, MediaItemMap::date_comparison comp);
 };
 
 #endif // MEDIAITEMMAP

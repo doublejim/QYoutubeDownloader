@@ -61,7 +61,6 @@ private slots:
     void fix_download_path();
     void stop_downloading();
     void delete_selected_item_on_queue();
-    void open_video();
     void select_directory();
     void refresh_interface();
     void download_top_video();
@@ -87,7 +86,7 @@ private slots:
     void shortcut_delete();
     void autostart_download(const QModelIndex&, int, int);
     // Media function
-    QList<QTableWidgetItem*> make_MediaList_row(MediaItem& mediaitem, int unique_id);
+    QList<QTableWidgetItem*> make_MediaList_row(MediaItem& mediaitem);
     void fillMediaList(MediaItemMap* itemmap);
     void refresh_MediaList();
     void refresh_MediaList_filtering();
@@ -102,7 +101,7 @@ private:
     void init_color_scheme();
     void save_settings();
     void apply_settings_at_startup();
-    void play_video(QString file);
+    void play_video(QString fullFilePath);
     void resolve_title(int item_key, QString url);
     void resolve_playlist_titles(QProcess * youtube_dl);
 

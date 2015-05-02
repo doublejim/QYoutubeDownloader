@@ -24,6 +24,7 @@ public:
     MediaItem(QString path,QString metapath):fullFilePath(path),jsonMetafile(metapath){}
     ~MediaItem(){}
 
+    int unique_id = 0;
     QString fullFilePath;
     QString fileName;
     QString jsonMetafile;

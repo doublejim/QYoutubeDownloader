@@ -26,9 +26,8 @@ void FileSearcher::beginSearch(QString searchDirectory, QStringList fileFilter)
                     newitem.jsonMetafile = metafile.fileName();
                 }
                 newitem.fillItUpJson();
-                mediaItemMap.addItem(newitem);
+                mediaItemMap.addItemGiveID(newitem);
             }
         }
-
     emit sigMediaSearchComplete(mediaItemMap);
 }
