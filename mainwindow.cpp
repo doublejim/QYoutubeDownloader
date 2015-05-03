@@ -612,7 +612,7 @@ QList<QTableWidgetItem*> MainWindow::make_MediaList_row(MediaItem& mediaitem)
     // TITLE
     QTableWidgetItem* newtitle = new QTableWidgetItem("");
     newtitle->setData(Qt::DisplayRole, mediaitem.title);
-    newtitle->setData(Qt::UserRole,mediaitem.unique_id);
+    newtitle->setData(Qt::UserRole, mediaitem.unique_id);
     newRow.append(newtitle);
 
     // DATE

@@ -23,7 +23,7 @@ public slots:
     void beginSearch(QString searchDirectory, QStringList filetypes);
 
 signals:
-    sigMediaSearchComplete(MediaItemMap a);
+    void sigMediaSearchComplete(MediaItemMap a);
 };
 
 #endif // FILESEARCH

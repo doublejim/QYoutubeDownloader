@@ -8,6 +8,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QRegularExpression>
+#include <QLatin1String>
 
 /* If you provide a MediaItem with a JSON metadata file,
  * the object can retrieve its data.
@@ -18,6 +19,7 @@ class MediaItem
 {
 private:
     QList<int> giveDate(QString dateString);
+    QString convertUnicodeCodePointsToUTF8(QString input);
 public:
     MediaItem(){}
     MediaItem(QString path):fullFilePath(path),upload_date(){}
