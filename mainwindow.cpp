@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
     settingsI.join("Main/SearchDate", ui->editSearchDate);
     settingsI.join("Main/SearchDateCombo", ui->comboSearchDate);
     settingsI.join("Main/OpenInPlayerAfterDownload", ui->checkOpenInPlayerAfterDownload);
-    settingsI.join("Main/ExitWhenFinished", ui->checkExitWhenFinshed);
+    settingsI.join("Main/ExitWhenFinished", ui->checkExitWhenFinished);
     settingsI.join("Main/SaveToSubdir", ui->checkSaveToSubdir);
     settingsI.join("Main/SubdirPattern", ui->comboSubdirPattern);
     settingsI.join("Main/AutoDownload", ui->checkAutoDownload);
@@ -120,6 +120,7 @@ void MainWindow::apply_settings_at_startup()
     else
         ui->stackedQueueInfoOptions->hide();
 
+    ui->splitter->restoreState( settings.value("MainWindow/splitter").toByteArray() );
     ui->tableMedia->setColumnWidth(0, settings.value("MainWindow/Column0Size",60).toInt());
     ui->tableMedia->setColumnWidth(1, settings.value("MainWindow/Column1Size",200).toInt());
     ui->tableMedia->setColumnWidth(2, settings.value("MainWindow/Column2Size",60).toInt());
@@ -162,6 +163,7 @@ void MainWindow::save_settings() // the settings that the QSettingsInterface can
         settings.setValue("MainWindow/size", size());
         settings.setValue("MainWindow/position", pos());
     }
+    settings.setValue("MainWindow/splitter", ui->splitter->saveState());
 
     settings.setValue("Main/ExpandStatusAndSettings", !ui->stackedQueueInfoOptions->isHidden() );
     settings.setValue("Main/StackedWidgetActivePage", ui->stackedQueueInfoOptions->currentIndex());
@@ -722,7 +724,7 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
         play_video(match.captured(4));
     }
 
-    last_youtubedl_output.clear(); // important: The last_youtubedl_output should only contain output from the latest download!
+    last_youtubedl_output.clear(); // important, because: The last_youtubedl_output should only contain output from the latest download!
 
     // DELETE QUEUE ITEM
     QListWidgetItem *item = ui->listVideoQueue->item(0);
@@ -736,7 +738,7 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
     ui->labelVideo->hide();
     ui->labelAudio->hide();
     ui->btnStartDownload->setText("Start downloading");
-    if(ui->checkExitWhenFinshed->isChecked() && ui->listVideoQueue->count() == 0)
+    if(ui->checkExitWhenFinished->isChecked() && ui->listVideoQueue->count() == 0)
         qApp->quit();
 }
 

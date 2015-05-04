@@ -8,7 +8,6 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QRegularExpression>
-#include <QLatin1String>
 
 /* If you provide a MediaItem with a JSON metadata file,
  * the object can retrieve its data.
