@@ -20,10 +20,13 @@ SettingsWindow::SettingsWindow(MainWindow &main_window, QWidget *parent) :
     settingsII.join("Settings/OutputTemplate", ui->editOutputTemplate);
     settingsII.join("Settings/Youtube-dlExecutable", ui->editYoutubedlExecutable);
     settingsII.join("Settings/FFMPEGPath", ui->editFFMPEGPath);
+
+    this->resize( main_window.settings.value("SettingsWindow/size",QSize(611,359)).toSize() );
 }
 
 SettingsWindow::~SettingsWindow()
 {
+    main_window.settings.setValue("SettingsWindow/size", this->size());
     delete ui;
 }
 
