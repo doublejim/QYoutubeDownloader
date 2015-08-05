@@ -266,12 +266,18 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
 {
     QString newOutput = youtube_dl->readAllStandardOutput(); // new output from youtube-dl.
 
-    ui->textDetails->setText(ui->textDetails->toPlainText()+newOutput); // adds text to textedit.
-    ui->textDetails->verticalScrollBar()->setSliderPosition(ui->textDetails->verticalScrollBar()->maximum()); // to scroll down automatically.
+    if (ui->textDetails->verticalScrollBar()->sliderPosition()==ui->textDetails->verticalScrollBar()->maximum())
+    {
+        ui->textDetails->append(newOutput.simplified());
+        ui->textDetails->verticalScrollBar()->setSliderPosition(ui->textDetails->verticalScrollBar()->maximum()); // scroll down automatically.
+    }
+    else {
+        ui->textDetails->append(newOutput.simplified());
+    }
 
     switch (download_progress)
     {
-        case 1: { // Starts downloading video.
+        case 1: { // Initialize
                 ui->statusBar->showMessage("Initialising video download...");
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
@@ -302,7 +308,7 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
                 }
                 break;
                 }
-        case 3: { // Starts downloading audio.
+        case 3: { // Initialize
                 ui->statusBar->showMessage("Initialising audio download...");
                 int i=newOutput.lastIndexOf("Destination:");
                 if (i!=-1)
@@ -693,6 +699,7 @@ void MainWindow::downloading_ended(int a) // delete top video, download next top
 {
     if (download_progress!=5) return; // is this good?
     youtube_dl->close();
+    youtube_dl->deleteLater();
     if (settings.value("OSD/Show").toBool())
         osd_->hide();
     ui->statusBar->showMessage("Downloading finished.");

@@ -55,6 +55,12 @@
             <property name="text">
              <string>Start downloading</string>
             </property>
+            <property name="iconSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item>
