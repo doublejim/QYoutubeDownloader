@@ -41,8 +41,15 @@ MediaItemMap MediaItemMap::returnItemsSearchUploaderAndTitle(QString search)
 {
     MediaItemMap results;
     foreach(MediaItem item, map.values())
-        if (item.uploader.indexOf(search,0,Qt::CaseInsensitive)!=-1 || item.title.indexOf(search,0,Qt::CaseInsensitive)!=-1)
-            results.addItem(item);
+    {
+        bool found=true;
+        foreach (QString searchPart, search.split(' ', QString::SkipEmptyParts))
+        {
+            if (item.uploader.indexOf(searchPart,0,Qt::CaseInsensitive)==-1 && item.title.indexOf(searchPart,0,Qt::CaseInsensitive)==-1)
+            { found=false; }
+        }
+        if (found) results.addItem(item);
+    }
     return results;
 }
 
