@@ -46,7 +46,7 @@ MediaItemMap MediaItemMap::returnItemsSearchUploaderAndTitle(QString search)
         foreach (QString searchPart, search.split(' ', QString::SkipEmptyParts))
         {
             if (item.uploader.indexOf(searchPart,0,Qt::CaseInsensitive)==-1 && item.title.indexOf(searchPart,0,Qt::CaseInsensitive)==-1)
-            { found=false; }
+                found=false;
         }
         if (found) results.addItem(item);
     }

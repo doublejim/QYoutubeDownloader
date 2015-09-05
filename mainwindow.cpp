@@ -170,6 +170,8 @@ void MainWindow::save_settings() // the settings that the QSettingsInterface can
     settings.setValue("MainWindow/Column0Size", ui->tableMedia->columnWidth(0));
     settings.setValue("MainWindow/Column1Size", ui->tableMedia->columnWidth(1));
     settings.setValue("MainWindow/Column2Size", ui->tableMedia->columnWidth(2));
+
+    //settings.setValue("MainWindow/SortByColumn", sortingByColumn);
 }
 
 void MainWindow::init_color_scheme()
@@ -936,4 +938,7 @@ void MainWindow::on_tableMedia_doubleClicked() // doubleclicking on a media item
     play_video(file);
 }
 
-
+void MainWindow::on_tableMedia_cellClicked(int row, int column)
+{
+    qDebug() << "pressed on: " << row << " " << column;
+}
