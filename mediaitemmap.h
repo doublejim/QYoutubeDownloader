@@ -29,8 +29,7 @@ public slots:
     void clear();
     QList<MediaItem> returnAllItems();
     int returnItemsCount();
-    MediaItemMap returnItemsSearchUploader(QString search);
-    MediaItemMap returnItemsSearchTitle(QString search);
+    MediaItemMap returnItemsSearchUploaderAndTitle(QString search);
     MediaItemMap returnItemsSearchDate(QString search, MediaItemMap::date_comparison comp);
 };
 

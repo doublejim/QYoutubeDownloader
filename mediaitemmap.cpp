@@ -37,20 +37,11 @@ int MediaItemMap::returnItemsCount()
     return map.size();
 }
 
-MediaItemMap MediaItemMap::returnItemsSearchUploader(QString search)
+MediaItemMap MediaItemMap::returnItemsSearchUploaderAndTitle(QString search)
 {
     MediaItemMap results;
     foreach(MediaItem item, map.values())
-        if (item.uploader.indexOf(search,0,Qt::CaseInsensitive)!=-1)
-            results.addItem(item);
-    return results;
-}
-
-MediaItemMap MediaItemMap::returnItemsSearchTitle(QString search)
-{
-    MediaItemMap results;
-    foreach(MediaItem item, map.values())
-        if (item.title.indexOf(search,0,Qt::CaseInsensitive)!=-1)
+        if (item.uploader.indexOf(search,0,Qt::CaseInsensitive)!=-1 || item.title.indexOf(search,0,Qt::CaseInsensitive)!=-1)
             results.addItem(item);
     return results;
 }

@@ -294,26 +294,16 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0,0,0">
           <item>
            <widget class="QLabel" name="labelSearchUploader">
             <property name="text">
-             <string>Uploader:</string>
+             <string>Filter:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="editSearchUploader"/>
-          </item>
-          <item>
-           <widget class="QLabel" name="labelSearchTitle">
-            <property name="text">
-             <string>Title:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="editSearchTitle"/>
+           <widget class="QLineEdit" name="editFilter"/>
           </item>
           <item>
            <widget class="QLabel" name="labelSearchDate">

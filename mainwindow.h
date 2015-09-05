@@ -92,10 +92,9 @@ private slots:
     void refresh_MediaList_filtering();
     void on_tableMedia_doubleClicked();
     //
-    void on_editSearchTitle_textChanged(const QString &arg1);
     void on_editSearchDate_textChanged(const QString &arg1);
     void on_comboSearchDate_currentIndexChanged(int index);
-    void on_editSearchUploader_textChanged(const QString &arg1);
+    void on_editFilter_textChanged(const QString &arg1);
 
 private:
     void init_color_scheme();

@@ -38,8 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboSubdirPattern->addItem("Playlist title", "%(playlist)s");
 
     settingsI.join("Main/DownloadPath", ui->editDownloadPath, ".");
-    settingsI.join("Main/SearchUploader", ui->editSearchUploader);
-    settingsI.join("Main/SearchTitle", ui->editSearchTitle);
+    settingsI.join("Main/SearchUploader", ui->editFilter);
     settingsI.join("Main/SearchDate", ui->editSearchDate);
     settingsI.join("Main/SearchDateCombo", ui->comboSearchDate);
     settingsI.join("Main/OpenInPlayerAfterDownload", ui->checkOpenInPlayerAfterDownload);
@@ -688,8 +687,7 @@ void MainWindow::refresh_MediaList_filtering() // filters the videos (without se
     if (currentMedia!=nullptr)
         delete currentMedia;
     currentMedia = new MediaItemMap(allMedia);
-    if (ui->editSearchUploader->text() != "") (*currentMedia)=(*currentMedia).returnItemsSearchUploader(ui->editSearchUploader->text());
-    if (ui->editSearchTitle->text() != "") (*currentMedia)=(*currentMedia).returnItemsSearchTitle(ui->editSearchTitle->text());
+    if (ui->editFilter->text() != "") (*currentMedia)=(*currentMedia).returnItemsSearchUploaderAndTitle(ui->editFilter->text());
     if (ui->editSearchDate->text() != "") (*currentMedia)=(*currentMedia).returnItemsSearchDate(ui->editSearchDate->text(), MediaItemMap::date_comparison(ui->comboSearchDate->currentIndex()));
 
     fillMediaList(currentMedia);
@@ -915,12 +913,7 @@ void MainWindow::on_checkAutoDownload_clicked()
     settings.setValue("Main/AutoDownload",ui->checkAutoDownload->isChecked());
 }
 
-void MainWindow::on_editSearchUploader_textChanged(const QString &arg1)
-{
-    refresh_MediaList_filtering();
-}
-
-void MainWindow::on_editSearchTitle_textChanged(const QString &arg1)
+void MainWindow::on_editFilter_textChanged(const QString &arg1)
 {
     refresh_MediaList_filtering();
 }
@@ -942,3 +935,5 @@ void MainWindow::on_tableMedia_doubleClicked() // doubleclicking on a media item
     QString file (allMedia.returnItem(item->data(Qt::UserRole).toInt()).fullFilePath);
     play_video(file);
 }
+
+
