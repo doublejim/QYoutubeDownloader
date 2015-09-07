@@ -1,35 +1,5 @@
 #include "mediaitem.h"
 
-QString MediaItem::convertUnicodeCodePointsToUTF8(QString input)
-{
-    QString result = "";
-
-    for (int i=0; i<input.length(); ++i)
-    {
-        if (input.midRef(i,2)=="\\u" && input.size()>=i+6) // if encountering a unicode code point,
-        {                                                  // and there are at least 6 characters left -- example: \u304d
-            QString thing = "";
-            ++i; // go after the "\"
-            for (int j=0; j<4; ++j)
-            {
-                ++i;
-                thing.append(input[i]);
-            }
-            QChar newchar (thing.toInt(0,16));
-            result += newchar;
-        }
-        else result += input[i];
-    }
-    return result;
-}
-
-QString MediaItem::getJsonElement(QString &allJsonContent, QString element)
-{
-    QRegularExpression exp ("\""+element+"\":\\s\"(.*?)\"");
-    QRegularExpressionMatch match = exp.match(allJsonContent);
-    return convertUnicodeCodePointsToUTF8(match.captured(1));
-}
-
 QList<int> MediaItem::giveDate(QString dateString) // the date is returned as a list of ints, for instance: { 2015, 01, 01 }
 {
     QRegularExpression exp ("(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)");
@@ -47,14 +17,13 @@ void MediaItem::fillItUpJson()
     { title=fileName; return; } // We'll have to make do with just the filename (*sigh*).
 
     QFile qfile(jsonMetafile);
-    QTextStream in (&qfile);
-    in.setCodec("UTF-8");
-    qfile.open(QIODevice::ReadOnly);
-    QString allJsonContent (in.readAll());
-    allJsonContent.replace("\\\"","\u201c"); //     so \" doesn't stop the reading of metadata (the lazy solution)
+    qfile.open(QIODevice::ReadOnly | QIODevice::Text);
+    QByteArray jsonData=qfile.readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+    QJsonObject obj = doc.object();
 
-    uploader = getJsonElement(allJsonContent,"uploader");
-    title = getJsonElement(allJsonContent,"title");
-    QList<int> tDate (giveDate(getJsonElement(allJsonContent,"upload_date")));
+    uploader = obj.value("uploader").toString();
+    title = obj.value("title").toString();
+    QList<int> tDate (giveDate(obj.value("upload_date").toString()));
     upload_date.setDate(tDate.at(0),tDate.at(1),tDate.at(2));
 }

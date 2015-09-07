@@ -5,9 +5,12 @@
 #include <QFile>
 #include <QDate>
 #include <QTime>
-#include <QTextStream>
+//#include <QTextStream>
 #include <QDebug>
 #include <QRegularExpression>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 
 /* If you provide a MediaItem with a JSON metadata file,
  * the object can retrieve its data.

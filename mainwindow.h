@@ -90,7 +90,6 @@ private slots:
     void fillMediaList(MediaItemMap* itemmap);
     void refresh_MediaList();
     void refresh_MediaList_filtering();
-    void on_tableMedia_cellClicked(int row, int column);
     void on_tableMedia_doubleClicked();
     //
     void on_editSearchDate_textChanged(const QString &arg1);
@@ -107,7 +106,7 @@ private:
 
     // Media search
     QThread fsearchThread;
-    FileSearcher* fsearch;
+    FileSearcher fsearch;
     MediaItemMap allMedia;
     MediaItemMap* currentMedia = nullptr;
     int sortingByColumn = 0;

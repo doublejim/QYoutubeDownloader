@@ -1,13 +1,16 @@
 #include "filesearcher.h"
 
-void FileSearcher::beginSearch(QString searchDirectory, QStringList fileFilter)
+void FileSearcher::search(QString searchDirectory, QStringList fileFilter)
 {
+    updatedDir = "";
+
+    doingMyJob = true;
+    abortSearch = false;
+
     QDir dir = searchDirectory;
     if (dir.exists()==false) return;
 
     MediaItemMap mediaItemMap;
-    //QStringList dirFilter;
-    //QFileInfoList all_folders;
 
     QDirIterator directories(searchDirectory, QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while(directories.hasNext())
@@ -28,6 +31,19 @@ void FileSearcher::beginSearch(QString searchDirectory, QStringList fileFilter)
                 newitem.fillItUpJson();
                 mediaItemMap.addItemGiveID(newitem);
             }
+            if (abortSearch) {
+                                doingMyJob=false;
+                                search(updatedDir, updatedFilter);
+                                return;
+                             }
         }
+    doingMyJob = false;
     emit sigMediaSearchComplete(mediaItemMap);
+}
+
+void FileSearcher::updateSearch(QString searchDirectory, QStringList fileFilter)
+{
+    updatedDir=searchDirectory;
+    updatedFilter=fileFilter;
+    abortSearch=true;
 }

@@ -18,13 +18,17 @@ class FileSearcher : public QObject
 public:
     FileSearcher(){}
     ~FileSearcher(){}
+    bool abortSearch = false;
+    bool doingMyJob = false;
+    QString updatedDir = "";
+    QStringList updatedFilter;
 
 public slots:
-    void beginSearch(QString searchDirectory, QStringList filetypes);
+    void search(QString searchDirectory, QStringList fileFilter);
+    void updateSearch(QString searchDirectory, QStringList fileFilter);
 
 signals:
     void sigMediaSearchComplete(MediaItemMap a);
 };
 
 #endif // FILESEARCH
-

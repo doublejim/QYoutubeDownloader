@@ -52,12 +52,11 @@ MainWindow::MainWindow(QWidget *parent) :
     apply_settings_at_startup();
 
     // Media file searching.
-    fsearch = new FileSearcher;
-    fsearch->moveToThread(&fsearchThread);
+    fsearch.moveToThread(&fsearchThread);
     fsearchThread.start();
     qRegisterMetaType<MediaItemMap>("MediaItemMap");
-    connect(this,&MainWindow::sigYouShouldSearchForMedia,fsearch, &FileSearcher::beginSearch);
-    connect(fsearch,&FileSearcher::sigMediaSearchComplete,this,&MainWindow::receivedMediaFiles);
+    connect(this,&MainWindow::sigYouShouldSearchForMedia,&fsearch, &FileSearcher::search);
+    connect(&fsearch,&FileSearcher::sigMediaSearchComplete,this,&MainWindow::receivedMediaFiles);
 
     // TODO: replace the OLD SIGNALS/SLOTS with the MODERN way of writing it:
     // like this: connect(item_from, &MainWindow::function_from, item_to, &OtherWindow::function_to);
@@ -91,7 +90,7 @@ MainWindow::~MainWindow()
         settingsI.saveSettingsFromGUI();
     }
 
-    delete fsearch;
+    fsearch.abortSearch=true;
     fsearchThread.exit();
     fsearchThread.wait();
 
@@ -681,7 +680,11 @@ void MainWindow::refresh_MediaList()
 
     QStringList fileFilter;
     fileFilter << "mkv" << "m4a" << "mp4" << "mp3" << "ogg" << "flv" << "webm";
-    emit sigYouShouldSearchForMedia(ui->editDownloadPath->text(),fileFilter);
+
+    if (fsearch.doingMyJob)
+        fsearch.updateSearch(ui->editDownloadPath->text(), fileFilter);
+    else
+        emit sigYouShouldSearchForMedia(ui->editDownloadPath->text(), fileFilter);
 }
 
 void MainWindow::refresh_MediaList_filtering() // filters the videos (without searching the harddisk)
@@ -936,9 +939,4 @@ void MainWindow::on_tableMedia_doubleClicked() // doubleclicking on a media item
     QTableWidgetItem* item = ui->tableMedia->currentItem();
     QString file (allMedia.returnItem(item->data(Qt::UserRole).toInt()).fullFilePath);
     play_video(file);
-}
-
-void MainWindow::on_tableMedia_cellClicked(int row, int column)
-{
-    qDebug() << "pressed on: " << row << " " << column;
 }
