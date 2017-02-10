@@ -44,14 +44,13 @@ public:
     void add_video_to_download_list_DefaultFormat(QString url);
     QSettings settings;
     QSettingsInterface settingsI;
-
     bool do_not_save_settings = false; // Is set to true if second instance is startet. Avoids messing with window position.
     int default_format();
-    void cancel_download();
     void apply_settings_while_running();
 
 public slots:
     void receivedMediaFiles(MediaItemMap itemmap);
+    void killYoutubeDL();
 
 signals:
     void sigYouShouldSearchForMedia(QString,QStringList);
@@ -59,12 +58,17 @@ signals:
 private slots:
     void check_download_path();
     void fix_download_path();
-    void stop_downloading();
     void delete_selected_item_on_queue();
     void select_directory();
+    void downloading_ended(int errorCode);
+    // Interface update
     void refresh_interface();
+    void interface_audioDownload_init(QString &newOutput);
+    void interface_audioDownload_progress(QString &newOutput);
+    void interface_videoDownload_init(QString &newOutput);
+    void interface_videoDownload_progress(QString &newOutput);
+    //
     void download_top_video();
-    void downloading_ended(int a);
     void create_item_title_from_its_data(QListWidgetItem* item);
     void on_btnStartDownload_clicked();
     void on_btnBrowse_clicked();
@@ -76,7 +80,7 @@ private slots:
     void on_actionStatusbar_toggled(bool view_statusbar);
     void on_actionOSD_toggled(bool show_osd);
     void customContextMenuRequested(QPoint);
-    void toggle_download_format();
+    void next_download_format();
     void on_listVideoQueue_doubleClicked();
     void on_btnShowStatus_clicked();
     void on_btnShowOptions_clicked();
@@ -95,7 +99,7 @@ private slots:
     void on_editSearchDate_textChanged(const QString &arg1);
     void on_comboSearchDate_currentIndexChanged(int index);
     void on_editFilter_textChanged(const QString &arg1);
-
+    void delete_top_queue_item();
 private:
     void init_color_scheme();
     void save_settings();
@@ -118,6 +122,9 @@ private:
     QStringList complete_filelist;
     int unique_item_key = 0;
     bool going_to_play_video = false;
+    int currentDownloadFormat = 0;
+    bool currentlyRunningYoutubeDL = false;
+    QString first_youtubedl_output;
     QString last_youtubedl_output;
     QString last_audio_destination;
 

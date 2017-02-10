@@ -31,6 +31,6 @@
     </qresource>
     <qresource prefix="/">
         <file>rc/dialog-cancel.png</file>
-        <file>rc/icon1.png</file>
+        <file>rc/icon10.png</file>
     </qresource>
 </RCC>

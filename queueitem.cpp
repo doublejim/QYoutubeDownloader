@@ -14,5 +14,6 @@ QString QueueItem::setTitle(QString& newtitle)
 
 void QueueItem::toggleFormat()
 {
-    format = 1 - format;
+    if (format == 2) format = 0;
+    else ++format;
 }

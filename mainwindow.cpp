@@ -58,6 +58,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this,&MainWindow::sigYouShouldSearchForMedia,&fsearch, &FileSearcher::search);
     connect(&fsearch,&FileSearcher::sigMediaSearchComplete,this,&MainWindow::receivedMediaFiles);
 
+    qRegisterMetaType<MediaItemMap>("ExitStatus");
+
     // TODO: replace the OLD SIGNALS/SLOTS with the MODERN way of writing it:
     // like this: connect(item_from, &MainWindow::function_from, item_to, &OtherWindow::function_to);
     // then all connections are verified at compile-time!
@@ -70,8 +72,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QShortcut* shortcut_ctrl_v = new QShortcut(QKeySequence(tr("Ctrl+V")), ui->listVideoQueue);
     connect(shortcut_ctrl_v, SIGNAL(activated()),this,SLOT(listVideoQueue_paste()));
-
-    connect(ui->listVideoQueue->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)), this, SLOT(autostart_download(const QModelIndex&, int, int)));
 
     ui->listVideoQueue->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listVideoQueue, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(customContextMenuRequested(QPoint)));
@@ -113,6 +113,8 @@ void MainWindow::apply_settings_at_startup()
     else
         ui->statusBar->hide();
 
+    ui->btnStartDownload->setVisible(false); // never showing when list is empty.
+
     if (settings.value("Main/ExpandStatusAndSettings").toBool())
         ui->stackedQueueInfoOptions->show();
     else
@@ -122,6 +124,21 @@ void MainWindow::apply_settings_at_startup()
     ui->tableMedia->setColumnWidth(0, settings.value("MainWindow/Column0Size",60).toInt());
     ui->tableMedia->setColumnWidth(1, settings.value("MainWindow/Column1Size",200).toInt());
     ui->tableMedia->setColumnWidth(2, settings.value("MainWindow/Column2Size",60).toInt());
+
+    int defFormat = settings.value("Main/DefaultFormat").toInt();
+
+    switch (defFormat)
+    {
+        case 0:
+            ui->radioVideo->setChecked(true);
+        break;
+        case 1:
+            ui->radioAudioVideo->setChecked(true);
+        break;
+        case 2:
+            ui->radioAudioOnly->setChecked(true);
+        break;
+    }
 
     // defaults:
     if (settings.value("Settings/Youtube-dlExecutable").toString()=="")
@@ -170,6 +187,12 @@ void MainWindow::save_settings() // the settings that the QSettingsInterface can
     settings.setValue("MainWindow/Column1Size", ui->tableMedia->columnWidth(1));
     settings.setValue("MainWindow/Column2Size", ui->tableMedia->columnWidth(2));
 
+    int defFormat = 0;
+    if (ui->radioVideo->isChecked()) defFormat = 0;
+    else if (ui->radioAudioVideo->isChecked()) defFormat = 1;
+    else if (ui->radioAudioOnly->isChecked()) defFormat = 2;
+    settings.setValue("Main/DefaultFormat", defFormat);
+
     //settings.setValue("MainWindow/SortByColumn", sortingByColumn);
 }
 
@@ -194,15 +217,14 @@ void MainWindow::init_color_scheme()
 
 int MainWindow::default_format()
 {
-    if ( ui->radioAudioVideo->isChecked() )
-        return 0;
-    else
-        return 1;
+    if ( ui->radioVideo->isChecked() ) return 0;
+    else if ( ui->radioAudioVideo->isChecked() ) return 1;
+    else if ( ui->radioAudioOnly->isChecked() ) return 2;
 }
 
-void MainWindow::cancel_download()
+void MainWindow::delete_top_queue_item()
 {
-    ui->btnStartDownload->click();
+    if (!ui->listVideoQueue->count() > 0) return;
     QListWidgetItem *item = ui->listVideoQueue->item(0);
     int item_key = item->data(Qt::UserRole).toInt();
     delete item;
@@ -219,10 +241,6 @@ void MainWindow::listVideoQueue_paste()
     if (mimeData->hasText())
     {
         text = mimeData->text();
-        int format;
-        if (ui->radioAudioVideo->isChecked())
-            format=0;
-        else format=1;
         add_video_to_download_list_DefaultFormat(text);
     }
 }
@@ -262,76 +280,103 @@ void MainWindow::select_directory()
     }
 }
 
+void MainWindow::interface_audioDownload_init(QString& newOutput)
+{
+    ui->statusBar->showMessage("Initialising audio download...");
+    int i = newOutput.lastIndexOf("Destination:");
+    if (i != -1)
+        ++download_progress;
+}
+
+void MainWindow::interface_audioDownload_progress(QString& newOutput)
+{
+    int i = newOutput.lastIndexOf("[download]");
+    if (i != -1)
+    {
+        QTextStream stream (&newOutput);
+        stream.seek(i + 10);
+        float value;
+        stream >> value;
+        ui->progressAudio->setValue(value);
+        QStringList first = newOutput.split(" of ");
+        QStringList second = first[1].split(" at ");
+        ui->statusBar->showMessage("Downloading audio: " + second[0]);
+        if (value == 100)
+            ++download_progress;
+    }
+}
+
+void MainWindow::interface_videoDownload_init(QString& newOutput)
+{
+    ui->statusBar->showMessage("Initialising video download...");
+    int i = newOutput.lastIndexOf("Destination:");
+    if (i != -1)
+    {
+        first_youtubedl_output.append( newOutput );
+        ++download_progress;
+    }
+}
+
+void MainWindow::interface_videoDownload_progress(QString& newOutput)
+{
+    int i = newOutput.lastIndexOf("[download]"); // look for text: "[download]".
+    if (i != -1)
+    {
+        QTextStream stream (&newOutput);
+        stream.seek(i+10); // go to the number after the "[download]"-text.
+        float value;
+        stream >> value; // save the number.
+        ui->progressVideo->setValue(value); // set progressbar to the found value.
+        QStringList first = newOutput.split(" of ");
+        QStringList second = first[1].split(" at ");
+        ui->statusBar->showMessage("Downloading video: " + second[0]);
+        if (value == 100)
+            ++download_progress;
+    }
+}
+
 void MainWindow::refresh_interface() // Updates the progress bars and the text output from youtube-dl.
 {
-    QString newOutput = youtube_dl->readAllStandardOutput(); // new output from youtube-dl.
+    QString newOutput = youtube_dl->readAll() + youtube_dl->readAllStandardError(); // new output from youtube-dl.
+    ui->textDetails->append(newOutput.simplified());
 
-    if (ui->textDetails->verticalScrollBar()->sliderPosition()==ui->textDetails->verticalScrollBar()->maximum())
+    if (ui->textDetails->verticalScrollBar()->sliderPosition() == ui->textDetails->verticalScrollBar()->maximum())
+        ui->textDetails->verticalScrollBar()->setSliderPosition( ui->textDetails->verticalScrollBar()->maximum() ); // scroll down automatically.
+
+    if (download_progress == 0)
     {
-        ui->textDetails->append(newOutput.simplified());
-        ui->textDetails->verticalScrollBar()->setSliderPosition(ui->textDetails->verticalScrollBar()->maximum()); // scroll down automatically.
-    }
-    else {
-        ui->textDetails->append(newOutput.simplified());
+        int current_item_key = ui->listVideoQueue->item(0)->data(Qt::UserRole).toInt();
+        currentDownloadFormat = queue_items[current_item_key].format;
+        download_progress = 1;
     }
 
-    switch (download_progress)
+    switch (currentDownloadFormat)
     {
-        case 1: { // Initialize
-                ui->statusBar->showMessage("Initialising video download...");
-                int i=newOutput.lastIndexOf("Destination:");
-                if (i!=-1)
-                {
-                    int current_item_key = ui->listVideoQueue->item(0)->data(Qt::UserRole).toInt();
-                    if (queue_items[current_item_key].format==0)  // Download Audio + video
-                        download_progress = 2;
-                    else // Download Audio
-                    {
-                        download_progress = 4;
-                    }
-                }
-                break;
-                }
-        case 2: { // Downloading video
-                int i=newOutput.lastIndexOf("[download]"); // look for text: "[download]".
-                if (i!=-1)
-                {
-                    QTextStream stream (&newOutput);
-                    stream.seek(i+10); // go to the number after the "[download]"-text.
-                    float value;
-                    stream >> value; // save the number.
-                    ui->progressVideo->setValue(value); // set progressbar to the found value.
-                    QStringList first = newOutput.split(" of ");
-                    QStringList second = first[1].split(" at ");
-                    ui->statusBar->showMessage("Downloading video: " + second[0]);
-                    if (value==100) ++download_progress;
-                }
-                break;
-                }
-        case 3: { // Initialize
-                ui->statusBar->showMessage("Initialising audio download...");
-                int i=newOutput.lastIndexOf("Destination:");
-                if (i!=-1)
-                    ++download_progress;
-                break;
-                }
-        case 4: { // Downloading audio.
-                int i=newOutput.lastIndexOf("[download]");
-                if (i!=-1)
-                {
-                    QTextStream stream (&newOutput);
-                    stream.seek(i+10);
-                    float value;
-                    stream >> value;
-                    ui->progressAudio->setValue(value);
-                    QStringList first = newOutput.split(" of ");
-                    QStringList second = first[1].split(" at ");
-                    ui->statusBar->showMessage("Downloading audio: " + second[0]);
-                    if (value==100) ++download_progress;
-                }
-                break;
-                }
+        case QueueItem::DownloadFormat::WHOLE_VIDEO:
+            switch(download_progress)
+            {
+                case 1: interface_videoDownload_init(newOutput); break;
+                case 2: interface_videoDownload_progress(newOutput); break;
+            }
+        break;
+        case QueueItem::DownloadFormat::SEPARATE_THEN_MUX:
+            switch(download_progress)
+            {
+                case 1: interface_videoDownload_init(newOutput); break;
+                case 2: interface_videoDownload_progress(newOutput); break;
+                case 3: interface_audioDownload_init(newOutput); break;
+                case 4: interface_audioDownload_progress(newOutput); break;
+            }
+        break;
+        case QueueItem::DownloadFormat::ONLY_AUDIO:
+            switch(download_progress)
+            {
+                case 1: interface_audioDownload_init(newOutput); break;
+                case 2: interface_audioDownload_progress(newOutput); break;
+            }
+        break;
     }
+
     if ( settings.value("OSD/Show").toBool() )
         osd_->update_progressbars(ui->progressAudio->value(), ui->progressVideo->value());
     last_youtubedl_output.append( newOutput ); // fixed a bug by appending instead of equaling.
@@ -339,12 +384,21 @@ void MainWindow::refresh_interface() // Updates the progress bars and the text o
 
 void MainWindow::download_top_video()
 {
-    if (ui->listVideoQueue->count()==0) return; // quits if the list is empty
+    if (currentlyRunningYoutubeDL) { qDebug() << "NOT downloading top video"; return; }
+    currentlyRunningYoutubeDL = true;
+
+    if (ui->listVideoQueue->count() == 0) return; // quits if the list is empty
+    ui->btnStartDownload->setVisible(false);
 
     QDir dir = ui->editDownloadPath->text();
-    if (dir.exists()==false || ui->editDownloadPath->text() == "") { QMessageBox message; message.setWindowTitle("Invalid folder.");
-                               message.setText("The download folder is invalid."); message.exec();
-                               return; }
+    if (dir.exists()==false || ui->editDownloadPath->text() == "")
+                                {
+                                    QMessageBox message;
+                                    message.setWindowTitle("Invalid folder.");
+                                    message.setText("The download folder is invalid.");
+                                    message.exec();
+                                    return;
+                                }
     fix_download_path(); // must happen AFTER the above check, because QDir::cleanPath causes a crash if the path is empty.
 
     QString program = settings.value("Settings/Youtube-dlExecutable").toString();
@@ -352,13 +406,20 @@ void MainWindow::download_top_video()
 
     QListWidgetItem* current_item = ui->listVideoQueue->item(0);
     int current_item_key = current_item->data(Qt::UserRole).toInt();
-    ushort format = queue_items[current_item_key].format;
+    int format = queue_items[current_item_key].format;
 
     QString format_to_download;
     switch (format)
     {
-        case 1: format_to_download = "bestaudio"; break;
-        default: format_to_download = "bestvideo+bestaudio"; break;
+        case QueueItem::DownloadFormat::WHOLE_VIDEO:
+            format_to_download = "best";
+        break;
+        case QueueItem::DownloadFormat::SEPARATE_THEN_MUX:
+            format_to_download = "bestvideo+bestaudio";
+        break;
+        case QueueItem::DownloadFormat::ONLY_AUDIO:
+            format_to_download = "bestaudio";
+        break;
     }
 
     QString output_path = ui->editDownloadPath->text();
@@ -381,25 +442,43 @@ void MainWindow::download_top_video()
         arguments << "--write-info-json";
 
     youtube_dl = new QProcess(this);
-    connect (youtube_dl, SIGNAL(readyReadStandardOutput()), this, SLOT(refresh_interface()));
+    connect (youtube_dl, SIGNAL(readyRead()), this, SLOT(refresh_interface()));
     connect (youtube_dl, SIGNAL(finished(int)), this, SLOT(downloading_ended(int)));
 
-    ui->progressVideo->setValue(0);
-    ui->progressAudio->setValue(0);
-    if(format == 0)
+    qDebug() << "the format is: " << format;
+    switch (format)
     {
+    case QueueItem::DownloadFormat::WHOLE_VIDEO:
+        ui->progressVideo->setValue(0);
         ui->progressVideo->show();
         ui->labelVideo->show();
+        ui->progressAudio->hide();
+        ui->labelAudio->hide();
+    break;
+    case QueueItem::DownloadFormat::SEPARATE_THEN_MUX:
+        ui->progressVideo->setValue(0);
+        ui->progressAudio->setValue(0);
+        ui->progressVideo->show();
+        ui->labelVideo->show();
+        ui->progressAudio->show();
+        ui->labelAudio->show();
+        qDebug() << "I'm doing the right thing";
+    break;
+    case QueueItem::DownloadFormat::ONLY_AUDIO:
+        ui->progressAudio->setValue(0);
+        ui->progressVideo->hide();
+        ui->labelVideo->hide();
+        ui->progressAudio->show();
+        ui->labelAudio->show();
+    break;
     }
-    ui->progressAudio->show();
-    ui->labelAudio->show();
-    ui->btnStartDownload->setText("Pause");
+
     if(settings.value("OSD/Show").toBool())
     {
         if(!ui->listVideoQueue->hasFocus() && !ui->btnAddVideoToQueue->hasFocus()) //TODO: Fix this line, its wrong
             osd_->showOSD("Downloading...");
     }
-    ++download_progress;
+    qDebug() << "starting download in youtube-dl!";
     youtube_dl->start(program,arguments);
 }
 
@@ -411,7 +490,7 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
     QListWidgetItem *item = ui->listVideoQueue->item( ui->listVideoQueue->currentRow() );
     int current_item_key = item->data(Qt::UserRole).toInt();
 
-    dialog.load(queue_items[current_item_key].title, queue_items[current_item_key].format, queue_items[current_item_key].downloadSubtitles, queue_items[current_item_key].downloadMetadata);
+    dialog.load(queue_items[current_item_key].url, queue_items[current_item_key].format, queue_items[current_item_key].downloadSubtitles, queue_items[current_item_key].downloadMetadata);
 
     if (dialog.exec())
     {
@@ -423,37 +502,23 @@ void MainWindow::on_listVideoQueue_doubleClicked() // edit item
         ui->listVideoQueue->addItem(item);
     }
 
-    if (settings.value("Main/AutoDownload").toBool() && download_progress==0) download_top_video();
+    if (settings.value("Main/AutoDownload").toBool() && download_progress == 0) download_top_video();
 }
 
 void MainWindow::delete_selected_item_on_queue()
 {
-    if(ui->listVideoQueue->selectedItems().contains(ui->listVideoQueue->item(0)))
+    if (!(ui->listVideoQueue->count() > 0)) return;
+    if (ui->listVideoQueue->selectedItems().contains( ui->listVideoQueue->item(0) )) // if top item is being deleted.
     {
-        if(youtube_dl != nullptr)
-            youtube_dl->close();
-        download_progress=0;
-        ui->btnStartDownload->setText("Start downloading");
-        ui->progressVideo->hide();
-        ui->progressAudio->hide();
-        ui->labelVideo->hide();
-        ui->labelAudio->hide();
+        youtube_dl->close();
     }
 
-    foreach(QListWidgetItem *item, ui->listVideoQueue->selectedItems())
+    foreach (QListWidgetItem *item, ui->listVideoQueue->selectedItems())
     {
         int item_key = item->data(Qt::UserRole).toInt();
         delete item;
         queue_items.remove(item_key);
     }
-}
-
-void MainWindow::stop_downloading()
-{
-    osd_->hide();
-    youtube_dl->close();
-    ui->btnStartDownload->setText("Resume");
-    download_progress=0;
 }
 
 void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
@@ -463,7 +528,8 @@ void MainWindow::create_item_title_from_its_data(QListWidgetItem* item)
     switch (queue_items[current_item_key].format)
     {
         case 0: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Video+Audio"); break;
-        case 1: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Audio only"); break;
+        case 1: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Video+Audio(multiplex)"); break;
+        case 2: item->setData(Qt::DisplayRole,queue_items[current_item_key].title+" | Audio only"); break;
     }
 }
 
@@ -529,7 +595,7 @@ void MainWindow::resolve_playlist_titles(QProcess *get_title)
             item = new QListWidgetItem(line);
             item->setData(Qt::UserRole, unique_item_key); // højeste nummer bliver til key
             queue_items[unique_item_key].title = line;
-            queue_items[unique_item_key].format = ui->radioAudioVideo->isChecked() ? 0 : 1; // IT SHOULDN'T JUST TAKE DEFAULTS
+            queue_items[unique_item_key].format = default_format(); // IT SHOULDN'T JUST TAKE DEFAULTS
             queue_items[unique_item_key].downloadSubtitles = ui->checkDownloadSubs->isChecked(); // IT SHOULDN'T JUST TAKE DEFAULTS
             queue_items[unique_item_key].downloadMetadata = ui->checkDownloadMeta->isChecked(); // IT SHOULDN'T JUST TAKE DEFAULTS
             create_item_title_from_its_data(item);
@@ -551,7 +617,7 @@ void MainWindow::resolve_playlist_titles(QProcess *get_title)
 
 void MainWindow::autostart_download(const QModelIndex&, int, int)
 {
-    if (ui->listVideoQueue->count() == 1 && settings.value("Main/AutoDownload").toBool() && download_progress==0)
+    if (ui->listVideoQueue->count() > 0 && settings.value("Main/AutoDownload").toBool() && download_progress==0)
         download_top_video();
 }
 
@@ -576,13 +642,21 @@ void MainWindow::add_video_to_download_list(QString url, int format, bool downlo
     QtConcurrent::run(this, &MainWindow::resolve_title, unique_item_key, url);
 
     ++unique_item_key;
+
+    bool autoDL = settings.value("Main/AutoDownload").toBool();
+
+    if (download_progress == 0)
+    {
+        if (autoDL)
+            download_top_video();
+        else
+            ui->btnStartDownload->setVisible(true);
+    }
 }
 
 void MainWindow::add_video_to_download_list_DefaultFormat(QString url)
 {
-    int format = 0;
-    if (ui->radioAudioOnly->isChecked()) format = 1;
-
+    int format = default_format();
     add_video_to_download_list(url, format, ui->checkDownloadSubs->isChecked(), ui->checkDownloadMeta->isChecked());
 }
 
@@ -698,67 +772,104 @@ void MainWindow::refresh_MediaList_filtering() // filters the videos (without se
     fillMediaList(currentMedia);
 }
 
-void MainWindow::downloading_ended(int a) // delete top video, download next top video.
+void MainWindow::downloading_ended(int errorCode) // delete top video, download next top video.
 {
-    if (download_progress!=5) return; // is this good?
-    youtube_dl->close();
-    youtube_dl->deleteLater();
-    if (settings.value("OSD/Show").toBool())
-        osd_->hide();
-    ui->statusBar->showMessage("Downloading finished.");
+    // NOTE: THERE IS SOME DOUBLE CODE IN THIS FUNCTION. (lazy)
 
-    download_progress=0;
+    refresh_interface(); // retrieve last output from process.
 
-    QRegularExpression exp ("([ffmpeg])(.*?)(\")(.*?)(\")"); // the line will say: [ffmpeg] Merging formats into "f:/filename.mkv" or [ffmpeg] Correcting container in "f:/filename.m4a"
-    QRegularExpressionMatch match = exp.match(last_youtubedl_output);
-    // CREATE AND ADD AS MEDIAITEM
-    if(match.captured(4) != "") // If file found, create MediaItem.
+    qDebug() << "downloading ended!: " << errorCode;
+    switch (errorCode)
     {
-        QString filepath (match.captured(4));
-        MediaItem mediaitem (filepath);
-        QFileInfo fileinfo (filepath);
-        mediaitem.fileName = fileinfo.fileName();
-
-        QFile metafile (filepath.left(filepath.length()-fileinfo.suffix().length()-1)+".info.json"); // construct the name the accompanying json-file would have had.
-        if (metafile.exists())
+        case 0: // EVERYTHING IS FINE.
         {
-            mediaitem.jsonMetafile = metafile.fileName();
+            youtube_dl->close();
+            youtube_dl->deleteLater();
+
+            download_progress = 0;
+
+            ui->statusBar->showMessage("Downloading finished.");
+
+            QRegularExpression exp1 ("(Destination: )(.*?)(\n|\r)");
+            QRegularExpressionMatch match1 = exp1.match(first_youtubedl_output); // the line will say: [download] Destination: F:\video.mp4
+            QRegularExpression exp2 ("([ffmpeg])(.*?)(\")(.*?)(\")"); // the line will say: [ffmpeg] Merging formats into "f:/filename.mkv" or [ffmpeg] Correcting container in "f:/filename.m4a"
+            QRegularExpressionMatch match2 = exp2.match(last_youtubedl_output);
+
+            // CREATE AND ADD AS MEDIAITEM
+            QString filepath = "";
+
+            if (currentDownloadFormat == 0)
+                filepath = match1.captured(2);   // if it's downloading a "whole" video, it uses a path from one of the first
+                                                 // youtube-dl outputs.
+            else filepath = match2.captured(4);  // if it's downloading video/audio separately, it uses a path from one of the
+                                                 // last youtube-dl outputs.
+
+            if (filepath != "") // If file found, create MediaItem.
+            {
+                MediaItem mediaitem (filepath);
+                QFileInfo fileinfo (filepath);
+                mediaitem.fileName = fileinfo.fileName();
+
+                QFile metafile (filepath.left(filepath.length()-fileinfo.suffix().length()-1)+".info.json"); // construct the name the accompanying json-file would have had.
+                if (metafile.exists())
+                {
+                    mediaitem.jsonMetafile = metafile.fileName();
+                }
+                mediaitem.fillItUpJson();
+                allMedia.addItemGiveID(mediaitem);
+                refresh_MediaList_filtering();
+            }
+
+            delete_top_queue_item();
+            last_youtubedl_output.clear(); // important, because: The last_youtubedl_output should only contain output from the latest download!
+            first_youtubedl_output.clear(); // ditto.
+
+            // PLAY MEDIA AFTER DOWNLOAD
+            if(ui->checkOpenInPlayerAfterDownload->isChecked() && filepath != "")
+            {
+                play_video(filepath);
+            }
         }
-        mediaitem.fillItUpJson();
-        allMedia.addItemGiveID(mediaitem);
-        refresh_MediaList_filtering();
-    }
-    // PLAY MEDIA AFTER DOWNLOAD
-    if(ui->checkOpenInPlayerAfterDownload->isChecked() && match.captured(4) != "")
-    {
-        play_video(match.captured(4));
-    }
+        break;
 
-    last_youtubedl_output.clear(); // important, because: The last_youtubedl_output should only contain output from the latest download!
+        default: // IF AN ERROR HAPPENED.
+        {
+            youtube_dl->deleteLater();
+            download_progress = 0;
+            delete_top_queue_item();
+            last_youtubedl_output.clear();
+            first_youtubedl_output.clear();
+            ui->textDetails->append("DOWNLOAD CANCELLED");
+        }
+        break;
+    }
+    currentlyRunningYoutubeDL = false;
 
-    // DELETE QUEUE ITEM
-    QListWidgetItem *item = ui->listVideoQueue->item(0);
-    int item_key = item->data(Qt::UserRole).toInt();
-    delete item;
-    queue_items.remove(item_key);
-    //
-    if (ui->listVideoQueue->count()>0) { download_top_video(); return; }
-    ui->progressVideo->hide(); // will only hide progressbars if there are no more videos to download.
+    if (ui->listVideoQueue->count() > 0) { download_top_video(); return; }
+
+    // WILL RUN WHEN QUEUE IS EMPTY.
+    ui->progressVideo->hide();
     ui->progressAudio->hide();
     ui->labelVideo->hide();
     ui->labelAudio->hide();
-    ui->btnStartDownload->setText("Start downloading");
-    if(ui->checkExitWhenFinished->isChecked() && ui->listVideoQueue->count() == 0)
+    if (settings.value("OSD/Show").toBool())
+        osd_->hide();
+    if(ui->checkExitWhenFinished->isChecked())
         qApp->quit();
+}
+
+void MainWindow::killYoutubeDL()
+{
+    /*if (youtube_dl != nullptr)
+    {
+        youtube_dl->close();
+        //youtube_dl->deleteLater();
+    }*/
 }
 
 void MainWindow::on_btnStartDownload_clicked() // start downloading
 {
-    if (ui->listVideoQueue->count()==0) return;
-    if (download_progress==0)
-        download_top_video();
-    else
-        stop_downloading();
+    download_top_video();
 }
 
 void MainWindow::on_btnBrowse_clicked() // browse for a directory
@@ -771,8 +882,7 @@ void MainWindow::on_btnAddVideoToQueue_clicked() // add video to download list
     DialogNewDownload dialog;
     dialog.setWindowTitle("Download this video");
     dialog.setModal(true);
-    int format = 0;
-    if (ui->radioAudioOnly->isChecked()) format = 1;
+    int format = default_format();
 
     dialog.load("", format, ui->checkDownloadSubs->isChecked(), ui->checkDownloadMeta->isChecked());
     if (dialog.exec())
@@ -827,12 +937,12 @@ void MainWindow::customContextMenuRequested(QPoint pos)
     QModelIndex index = ui->listVideoQueue->indexAt(pos);
 
     QMenu *menu=new QMenu(this);
-    menu->addAction("Toggle download Video+Audio/Audio only", this, SLOT(toggle_download_format()));
+    menu->addAction("Next format", this, SLOT(next_download_format()));
 
     menu->popup(ui->listVideoQueue->viewport()->mapToGlobal(pos));
 }
 
-void MainWindow::toggle_download_format()
+void MainWindow::next_download_format()
 {
     QModelIndexList indexes = ui->listVideoQueue->selectionModel()->selectedIndexes();
     QListWidgetItem *item;
@@ -880,7 +990,9 @@ void MainWindow::delete_file_from_disk()
 void MainWindow::shortcut_delete()
 {
     if (ui->listVideoQueue->hasFocus())
+    {
         delete_selected_item_on_queue();
+    }
     else if (ui->tableMedia->hasFocus())
         delete_file_from_disk();
 }

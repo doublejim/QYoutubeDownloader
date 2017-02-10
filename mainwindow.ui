@@ -7,11 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>719</width>
-    <height>579</height>
+    <height>632</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>QYoutubeDownloader</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="style.qrc">
+    <normaloff>:/rc/icon10.png</normaloff>:/rc/icon10.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -52,8 +56,12 @@
           </property>
           <item>
            <widget class="QPushButton" name="btnStartDownload">
+            <property name="styleSheet">
+             <string notr="true">background-color: qlineargradient(spread:pad, x1:0.48, y1:0.9605, x2:0.462802, y2:0, stop:0.0795455 rgba(53, 164, 18, 255), stop:1 rgba(105, 214, 85, 255));
+color: rgb(0, 0, 0);</string>
+            </property>
             <property name="text">
-             <string>Start downloading</string>
+             <string>Download</string>
             </property>
             <property name="iconSize">
              <size>
@@ -223,9 +231,12 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_4">
                 <item>
-                 <widget class="QRadioButton" name="radioAudioVideo">
+                 <widget class="QRadioButton" name="radioVideo">
+                  <property name="toolTip">
+                   <string extracomment="Default. Works for all sites."/>
+                  </property>
                   <property name="text">
-                   <string>Video and Audio</string>
+                   <string>Video + Audio</string>
                   </property>
                   <property name="checked">
                    <bool>true</bool>
@@ -233,7 +244,23 @@
                  </widget>
                 </item>
                 <item>
+                 <widget class="QRadioButton" name="radioAudioVideo">
+                  <property name="toolTip">
+                   <string extracomment="Youtube only! Downloads video and audio separately, then combines them using ffmpeg."/>
+                  </property>
+                  <property name="text">
+                   <string>Video + Audio (multiplex)</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QRadioButton" name="radioAudioOnly">
+                  <property name="toolTip">
+                   <string extracomment="Youtube only! Requires ffmpeg."/>
+                  </property>
                   <property name="text">
                    <string>Only Audio</string>
                   </property>
@@ -527,6 +554,8 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="style.qrc"/>
+ </resources>
  <connections/>
 </ui>

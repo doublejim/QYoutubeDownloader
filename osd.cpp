@@ -46,7 +46,7 @@ OSD::~OSD()
 
 void OSD::on_pushCancel_clicked()
 {
-    main_window.cancel_download();
+    main_window.killYoutubeDL();
     this->hide();
 }
 
